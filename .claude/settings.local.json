@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --version:*)",
+      "Bash(npm --version)",
+      "Bash(rustc:*)",
+      "Bash(cargo --version:*)",
+      "Bash(where.exe:*)",
+      "Bash(test -f:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(node scripts/generate-icons.mjs:*)",
+      "Bash(cargo build:*)",
+      "Bash(\"$USERPROFILE/.cargo/bin/cargo\" build:*)",
+      "Bash(\"$USERPROFILE/.cargo/bin/cargo\" install tauri-cli --version \"^2.0\")",
+      "Bash(\"$USERPROFILE/.cargo/bin/cargo\" clean:*)"
+    ]
+  }
+}

@@ -3,10 +3,8 @@
 //! Implements session tracking and undo capability per doc 07.
 //! Every file operation is logged for full reversibility.
 
-use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection, Result as SqlResult};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use uuid::Uuid;
 
 // ============================================
@@ -105,6 +103,7 @@ impl OperationStatus {
 }
 
 /// Error severity levels
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorSeverity {
@@ -449,6 +448,7 @@ pub fn get_session_operations(conn: &Connection, session_id: &str) -> SqlResult<
 // ============================================
 
 /// Log an error during a session
+#[allow(dead_code)]
 pub fn log_error(
     conn: &Connection,
     session_id: &str,

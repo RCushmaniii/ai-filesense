@@ -2,7 +2,8 @@
   "app": {
     "name": "AI FileSense",
     "tagline": "Organización de archivos con IA",
-    "footerPrivacy": "Tus archivos permanecen locales — solo se procesan metadatos"
+    "footerPrivacy": "Tus archivos permanecen locales — solo se procesan metadatos",
+    "startOver": "Iniciar nueva organización"
   },
   "home": {
     "welcome": "¿Qué te gustaría hacer?",
@@ -44,8 +45,9 @@
     "fileTypesSubtitle": "Selecciona los tipos de archivo que quieres organizar",
     "fileTypes": {
       "pdf": "Archivos PDF",
-      "txt": "Archivos de texto",
-      "word": "Documentos de Word"
+      "txt": "Texto y Markdown",
+      "word": "Documentos de Word",
+      "powerpoint": "Presentaciones de PowerPoint"
     },
     "comingSoon": "Próximamente",
     "startScan": "Escanear mis documentos",
@@ -180,7 +182,7 @@
   "results": {
     "title": "Esto es lo que encontramos",
     "ready": "Listo para organizar",
-    "documentsFound": "Encontramos {count} documentos listos para organizar",
+    "documentsFound": "Encontramos {count} archivos para organizar",
     "documentsInto": "documentos en",
     "documents": "documentos",
     "folders": "carpetas",
@@ -196,7 +198,7 @@
       "timeline": "Cronológico",
       "smart_groups": "Grupos Inteligentes"
     },
-    "needsReview": "documentos necesitan revisión (baja confianza)",
+    "needsReview": "archivos necesitan revisión manual antes de colocarlos en una carpeta específica",
     "reviewChanges": "Revisar Cambios"
   },
   "organizationStyles": {
@@ -442,7 +444,7 @@
     "autoArchive": "Archivar archivos antiguos automáticamente",
     "autoArchiveDesc": "Los archivos de más de 3 años se mueven a Archivo.",
     "activityTitle": "Qué cambió recientemente",
-    "noRecentActivity": "No hay actividad reciente que mostrar.",
+    "noRecentActivity": "Cuando se organicen, muevan o archiven archivos, verás esos cambios listados aquí con fechas y detalles.",
     "undoLastOrganization": "Deshacer última organización",
     "folderInfo": {
       "review": {

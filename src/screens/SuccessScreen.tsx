@@ -17,6 +17,7 @@ import { useTranslation } from '@/i18n';
 import { useAppState } from '@/store/appState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Stepper, ORGANIZATION_STEPS } from '@/components/Stepper';
 import { invoke } from '@tauri-apps/api/core';
 import {
   CheckCircle2,
@@ -32,18 +33,19 @@ import {
 } from 'lucide-react';
 
 // The 11 guardrail folders in order
+// displayNumber for UI, folderNumber for actual disk path
 const GUARDRAIL_FOLDERS = [
-  { id: 'Review', number: '00', color: 'text-amber-600 dark:text-amber-400' },
-  { id: 'Work', number: '01', color: 'text-blue-600 dark:text-blue-400' },
-  { id: 'Money', number: '02', color: 'text-green-600 dark:text-green-400' },
-  { id: 'Home', number: '03', color: 'text-orange-600 dark:text-orange-400' },
-  { id: 'Health', number: '04', color: 'text-red-600 dark:text-red-400' },
-  { id: 'Legal', number: '05', color: 'text-purple-600 dark:text-purple-400' },
-  { id: 'School', number: '06', color: 'text-cyan-600 dark:text-cyan-400' },
-  { id: 'Family', number: '07', color: 'text-pink-600 dark:text-pink-400' },
-  { id: 'Clients', number: '08', color: 'text-indigo-600 dark:text-indigo-400' },
-  { id: 'Projects', number: '09', color: 'text-teal-600 dark:text-teal-400' },
-  { id: 'Archive', number: '10', color: 'text-slate-600 dark:text-slate-400' },
+  { id: 'Review', displayNumber: '00', folderNumber: '11', color: 'text-amber-600 dark:text-amber-400' },
+  { id: 'Work', displayNumber: '01', folderNumber: '01', color: 'text-blue-600 dark:text-blue-400' },
+  { id: 'Money', displayNumber: '02', folderNumber: '02', color: 'text-green-600 dark:text-green-400' },
+  { id: 'Home', displayNumber: '03', folderNumber: '03', color: 'text-orange-600 dark:text-orange-400' },
+  { id: 'Health', displayNumber: '04', folderNumber: '04', color: 'text-red-600 dark:text-red-400' },
+  { id: 'Legal', displayNumber: '05', folderNumber: '05', color: 'text-purple-600 dark:text-purple-400' },
+  { id: 'School', displayNumber: '06', folderNumber: '06', color: 'text-cyan-600 dark:text-cyan-400' },
+  { id: 'Family', displayNumber: '07', folderNumber: '07', color: 'text-pink-600 dark:text-pink-400' },
+  { id: 'Clients', displayNumber: '08', folderNumber: '08', color: 'text-indigo-600 dark:text-indigo-400' },
+  { id: 'Projects', displayNumber: '09', folderNumber: '09', color: 'text-teal-600 dark:text-teal-400' },
+  { id: 'Archive', displayNumber: '10', folderNumber: '10', color: 'text-slate-600 dark:text-slate-400' },
 ];
 
 interface GuardrailCount {
@@ -88,10 +90,21 @@ export function SuccessScreen() {
     loadCounts();
   }, []);
 
-  const handleOpenFolder = async () => {
+  const handleOpenFolder = async (category?: string) => {
     try {
-      // Open the Documents folder in file explorer
-      await invoke('open_folder', { path: 'Documents' });
+      if (category) {
+        // Find the folder with the matching category
+        const folder = GUARDRAIL_FOLDERS.find((f) => f.id === category);
+        if (folder) {
+          // Use folderNumber for actual disk path
+          await invoke('open_folder', { path: `Organized Files/${folder.folderNumber} ${folder.id}` });
+        } else {
+          await invoke('open_folder', { path: 'Organized Files' });
+        }
+      } else {
+        // Open the main Organized Files folder
+        await invoke('open_folder', { path: 'Organized Files' });
+      }
     } catch (error) {
       console.error('Error opening folder:', error);
     }
@@ -139,6 +152,9 @@ export function SuccessScreen() {
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
       <div className="max-w-2xl w-full mx-auto space-y-8">
+        {/* Stepper */}
+        <Stepper steps={ORGANIZATION_STEPS} currentStep={7} />
+
         {/* 1. Summary Section - Top */}
         <div className="text-center space-y-4">
           {/* Success icon */}
@@ -244,7 +260,7 @@ export function SuccessScreen() {
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-xs font-mono text-muted-foreground">
-                          {folder.number}
+                          {folder.displayNumber}
                         </span>
                         <span className={`font-medium ${folder.color}`}>
                           {getLocalizedCategory(folder.id)}
@@ -277,7 +293,7 @@ export function SuccessScreen() {
                         </div>
                         <button
                           className="mt-2 text-primary text-sm hover:underline flex items-center gap-1"
-                          onClick={handleOpenFolder}
+                          onClick={() => handleOpenFolder(folder.id)}
                         >
                           <FolderOpen className="h-3 w-3" />
                           {isSpanish ? 'Ver carpeta' : 'View folder'}

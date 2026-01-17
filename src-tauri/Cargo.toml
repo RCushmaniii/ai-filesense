@@ -31,6 +31,11 @@ uuid = { version = "1", features = ["v4"] }
 dirs = "5"
 dotenvy = "0.15"
 
+# Document parsing (Phase 1 & 2)
+zip = "2.1"                    # For extracting .docx, .pptx (Office Open XML)
+quick-xml = "0.36"             # For parsing XML inside Office documents
+pdf-extract = "0.7"            # For extracting text from PDFs
+
 [profile.dev]
 incremental = true
 

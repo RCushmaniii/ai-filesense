@@ -11,6 +11,7 @@ import { useAppState } from '@/store/appState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Stepper, ORGANIZATION_STEPS } from '@/components/Stepper';
 import { invoke } from '@tauri-apps/api/core';
 import {
   Loader2,
@@ -21,6 +22,9 @@ import {
   FileSearch,
   Brain,
   AlertCircle,
+  FolderOpen,
+  CheckCircle2,
+  ArrowLeft,
 } from 'lucide-react';
 
 // Type for classification progress from backend
@@ -69,7 +73,7 @@ const AI_STATUS_MESSAGES = [
 ];
 
 export function ScanningScreen() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { state, pauseScan, resumeScan, cancelScan, dispatch } = useAppState();
   const scanStarted = useRef(false);
   const isPausedRef = useRef(false);
@@ -79,9 +83,14 @@ export function ScanningScreen() {
   const [simulatedProgress, setSimulatedProgress] = useState(0);
   const [discoveryComplete, setDiscoveryComplete] = useState(false);
 
+  // Track when no files are found (for friendly empty state)
+  const [noFilesFound, setNoFilesFound] = useState(false);
+
   // Rotating status message index
   const [statusMessageIndex, setStatusMessageIndex] = useState(0);
   const lastStatusUpdateRef = useRef(0);
+
+  const isSpanish = language === 'es-MX';
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -141,7 +150,6 @@ export function ScanningScreen() {
 
   // Run AI classification in batches
   const runAIClassification = useCallback(async (totalFiles: number) => {
-    console.log('[AI] Starting classification for', totalFiles, 'files');
     dispatch({ type: 'START_AI_ANALYSIS' });
 
     const batchSize = 20;
@@ -175,8 +183,6 @@ export function ScanningScreen() {
         classified = result.classified;
         consecutiveErrors = 0; // Reset on success
 
-        console.log('[AI] Classified:', classified, '/', totalFiles);
-
         dispatch({
           type: 'UPDATE_SCAN_PROGRESS',
           progress: {
@@ -209,7 +215,6 @@ export function ScanningScreen() {
 
     // Complete AI analysis
     if (!isCancelledRef.current && consecutiveErrors < maxConsecutiveErrors) {
-      console.log('[AI] Classification complete');
       dispatch({ type: 'COMPLETE_AI_ANALYSIS' });
     }
   }, [dispatch]);
@@ -224,8 +229,6 @@ export function ScanningScreen() {
       try {
         // Get folder paths to scan
         const paths = state.selectedFolders.map(f => f.path);
-        console.log('[Scanning] Starting scan for paths:', paths);
-        console.log('[Scanning] Extensions filter:', state.selectedExtensions);
 
         // Add timeout to prevent hanging forever
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -241,11 +244,11 @@ export function ScanningScreen() {
           timeoutPromise,
         ]);
 
-        console.log('[Scanning] Found files:', files.length);
         const fileCount = files.length;
 
         if (fileCount === 0) {
-          dispatch({ type: 'SET_ERROR', error: 'No files found matching the selected file types. Try selecting different folders or file types.' });
+          // Show friendly empty state instead of error
+          setNoFilesFound(true);
           return;
         }
 
@@ -280,6 +283,20 @@ export function ScanningScreen() {
     cancelScan();
   };
 
+  // Handle going back to folder selection
+  const handleGoBack = () => {
+    dispatch({ type: 'RESET_SCAN' });
+  };
+
+  // Handle opening the Organized Files folder
+  const handleOpenOrganizedFiles = async () => {
+    try {
+      await invoke('open_folder', { path: 'Organized Files' });
+    } catch (error) {
+      console.error('Error opening folder:', error);
+    }
+  };
+
   const progressValue = progress ?
     (isDiscoveryPhase
       ? simulatedProgress // Use animated progress during discovery
@@ -289,9 +306,93 @@ export function ScanningScreen() {
   // Get current status message
   const currentStatusMessage = AI_STATUS_MESSAGES[statusMessageIndex];
 
+  // Show friendly "no files found" screen
+  if (noFilesFound) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8">
+        <div className="max-w-md w-full space-y-8">
+          {/* Stepper */}
+          <Stepper steps={ORGANIZATION_STEPS} currentStep={1} />
+
+          {/* Success-like icon (files are already organized!) */}
+          <div className="flex justify-center">
+            <div className="h-24 w-24 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+
+          {/* Friendly message */}
+          <div className="text-center space-y-3">
+            <h1 className="text-2xl font-semibold">
+              {isSpanish ? '¡Todo está organizado!' : 'Everything is organized!'}
+            </h1>
+            <p className="text-muted-foreground">
+              {isSpanish
+                ? 'No encontramos archivos nuevos para organizar en las carpetas seleccionadas.'
+                : 'We didn\'t find any new files to organize in the selected folders.'}
+            </p>
+          </div>
+
+          {/* Helpful suggestions card */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-sm font-medium">
+                {isSpanish ? '¿Qué puedes hacer?' : 'What can you do?'}
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  {isSpanish
+                    ? 'Revisa tus archivos organizados en la carpeta "Organized Files"'
+                    : 'Check your organized files in the "Organized Files" folder'}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  {isSpanish
+                    ? 'Agrega nuevos archivos a Escritorio, Documentos o Descargas'
+                    : 'Add new files to Desktop, Documents, or Downloads'}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  {isSpanish
+                    ? 'Selecciona diferentes carpetas para escanear'
+                    : 'Select different folders to scan'}
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Action buttons */}
+          <div className="flex flex-col gap-3">
+            <Button
+              size="lg"
+              className="w-full gap-2"
+              onClick={handleOpenOrganizedFiles}
+            >
+              <FolderOpen className="h-5 w-5" />
+              {isSpanish ? 'Ver archivos organizados' : 'View organized files'}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full gap-2"
+              onClick={handleGoBack}
+            >
+              <ArrowLeft className="h-5 w-5" />
+              {isSpanish ? 'Seleccionar otras carpetas' : 'Select different folders'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Stepper */}
+        <Stepper steps={ORGANIZATION_STEPS} currentStep={1} />
+
         {/* Animated icon */}
         <div className="flex justify-center">
           <div className="relative">
@@ -339,7 +440,7 @@ export function ScanningScreen() {
           <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
             <CardContent className="p-4 flex gap-3">
               <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-              <p className="text-sm text-blue-800 dark:text-blue-200 transition-opacity duration-300">
+              <p className="text-base text-blue-800 dark:text-blue-200 transition-opacity duration-300">
                 {t(currentStatusMessage)}
               </p>
             </CardContent>

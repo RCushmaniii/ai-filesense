@@ -31,7 +31,7 @@ interface IncompleteSession {
 }
 
 function AppContent() {
-  const { state } = useAppState();
+  const { state, dispatch } = useAppState();
   const { t } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
@@ -124,17 +124,21 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex flex-col">
+    <div className="h-screen bg-gradient-to-b from-background to-muted/20 flex flex-col overflow-hidden">
       {/* Header - only show after welcome */}
       {state.hasCompletedWelcome && (
         <header className="border-b bg-background/80 backdrop-blur-sm">
           <div className="container flex h-14 items-center justify-between px-4">
-            <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              onClick={() => dispatch({ type: 'RESET_SCAN' })}
+              title={t('app.startOver')}
+            >
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">AI</span>
               </div>
               <span className="font-semibold">{t('app.name')}</span>
-            </div>
+            </button>
             <div className="flex items-center gap-2">
               <LanguageSwitcher minimal />
               <button
@@ -150,7 +154,7 @@ function AppContent() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
         {renderScreen()}
       </main>
 
@@ -161,7 +165,7 @@ function AppContent() {
             <span>© 2025 AI FileSense. {t('footer.allRightsReserved')}</span>
             <div className="flex items-center gap-4">
               <a
-                href="https://aifilesense.com/privacy"
+                href="https://ai-filesense-website.vercel.app/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
@@ -169,7 +173,7 @@ function AppContent() {
                 {t('footer.privacy')}
               </a>
               <a
-                href="https://aifilesense.com/terms"
+                href="https://ai-filesense-website.vercel.app/terms"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
@@ -177,7 +181,7 @@ function AppContent() {
                 {t('footer.terms')}
               </a>
               <a
-                href="https://aifilesense.com"
+                href="https://ai-filesense-website.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"

@@ -1,3 +1,4 @@
+use crate::document_parser;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{self, File};
@@ -148,42 +149,53 @@ fn compute_file_hash(path: &Path) -> Option<String> {
 }
 
 /// Extract text snippet from a file for AI classification
+/// Uses the document_parser module for proper content extraction (Phase 1 & 2)
 #[allow(dead_code)]
 pub fn extract_snippet(path: &Path, max_chars: usize) -> Option<String> {
     let extension = path.extension()?.to_string_lossy().to_lowercase();
 
-    match extension.as_str() {
-        "txt" | "md" | "json" | "xml" | "csv" | "log" => {
-            extract_text_snippet(path, max_chars)
+    // Check if this file type is supported by our document parsers
+    if document_parser::is_supported_type(&extension) {
+        match document_parser::extract_document_content(path, max_chars) {
+            Ok(parsed) => {
+                // Return extracted content with confidence indicator
+                if parsed.content.is_empty() {
+                    // Fallback to filename if extraction returned empty
+                    Some(format!(
+                        "[{} - no text extracted] Filename: {}",
+                        extension.to_uppercase(),
+                        path.file_name()?.to_string_lossy()
+                    ))
+                } else {
+                    Some(parsed.content)
+                }
+            }
+            Err(_) => {
+                // Extraction failed, use filename fallback
+                Some(format!(
+                    "[{} Document] Filename: {}",
+                    extension.to_uppercase(),
+                    path.file_name()?.to_string_lossy()
+                ))
+            }
         }
-        // PDF extraction would require additional dependencies
-        // For now, return filename-based info
-        "pdf" => Some(format!(
-            "[PDF Document] Filename: {}",
-            path.file_name()?.to_string_lossy()
-        )),
-        // Office documents would need additional parsing
-        "docx" | "xlsx" | "pptx" => Some(format!(
-            "[Office Document] Filename: {}",
-            path.file_name()?.to_string_lossy()
-        )),
-        // Images - return metadata only
-        "jpg" | "jpeg" | "png" | "gif" | "webp" => Some(format!(
-            "[Image] Filename: {}",
-            path.file_name()?.to_string_lossy()
-        )),
-        _ => None,
+    } else {
+        // Unsupported file types - return metadata only
+        match extension.as_str() {
+            // Legacy Office formats (not yet supported - Phase 5)
+            "doc" | "xls" | "ppt" => Some(format!(
+                "[Legacy Office Document] Filename: {}",
+                path.file_name()?.to_string_lossy()
+            )),
+            // Images - return metadata only
+            "jpg" | "jpeg" | "png" | "gif" | "webp" | "bmp" | "tiff" => Some(format!(
+                "[Image] Filename: {}",
+                path.file_name()?.to_string_lossy()
+            )),
+            // Unknown types
+            _ => None,
+        }
     }
-}
-
-/// Extract text from plain text files
-#[allow(dead_code)]
-fn extract_text_snippet(path: &Path, max_chars: usize) -> Option<String> {
-    let mut file = File::open(path).ok()?;
-    let mut buffer = vec![0u8; max_chars];
-    let bytes_read = file.read(&mut buffer).ok()?;
-
-    String::from_utf8(buffer[..bytes_read].to_vec()).ok()
 }
 
 #[cfg(test)]

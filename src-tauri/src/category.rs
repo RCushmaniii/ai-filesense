@@ -113,8 +113,9 @@ impl Category {
     }
 
     /// Get confidence threshold - items below this go to Review
+    /// Lowered from 0.70 to 0.35 to reduce "needs review" file count
     pub fn review_confidence_threshold() -> f64 {
-        0.70
+        0.35
     }
 }
 

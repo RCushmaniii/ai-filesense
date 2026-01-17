@@ -16,6 +16,7 @@ import {
   FileText,
   File,
   FileSpreadsheet,
+  Presentation,
   ChevronRight,
   Shield,
 } from 'lucide-react';
@@ -31,10 +32,10 @@ const FILE_TYPES = [
   },
   {
     id: 'txt',
-    extensions: ['txt'],
+    extensions: ['txt', 'md', 'markdown'],
     icon: File,
     labelKey: 'folderSelection.fileTypes.txt',
-    description: '.txt',
+    description: '.txt, .md',
   },
   {
     id: 'word',
@@ -42,6 +43,13 @@ const FILE_TYPES = [
     icon: FileSpreadsheet,
     labelKey: 'folderSelection.fileTypes.word',
     description: '.doc, .docx',
+  },
+  {
+    id: 'powerpoint',
+    extensions: ['ppt', 'pptx'],
+    icon: Presentation,
+    labelKey: 'folderSelection.fileTypes.powerpoint',
+    description: '.ppt, .pptx',
   },
 ] as const;
 
@@ -63,7 +71,7 @@ export function FileTypesScreen() {
       }
       return types;
     }
-    return new Set(['pdf', 'txt', 'word']); // Default all selected
+    return new Set(['pdf', 'txt', 'word', 'powerpoint']); // Default all selected
   });
 
   const handleToggle = (typeId: FileTypeId) => {

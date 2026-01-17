@@ -39,18 +39,20 @@ import {
 } from 'lucide-react';
 
 // The 11 guardrail folders in order
+// Note: Display number (for UI) vs actual folder number (on disk) may differ
+// Review is shown first (00) for visibility but its actual folder is "11 Review"
 const GUARDRAIL_FOLDERS = [
-  { id: 'Review', number: '00', color: 'amber' },
-  { id: 'Work', number: '01', color: 'blue' },
-  { id: 'Money', number: '02', color: 'green' },
-  { id: 'Home', number: '03', color: 'orange' },
-  { id: 'Health', number: '04', color: 'red' },
-  { id: 'Legal', number: '05', color: 'purple' },
-  { id: 'School', number: '06', color: 'cyan' },
-  { id: 'Family', number: '07', color: 'pink' },
-  { id: 'Clients', number: '08', color: 'indigo' },
-  { id: 'Projects', number: '09', color: 'teal' },
-  { id: 'Archive', number: '10', color: 'slate' },
+  { id: 'Review', displayNumber: '00', folderNumber: '11', color: 'amber' },
+  { id: 'Work', displayNumber: '01', folderNumber: '01', color: 'blue' },
+  { id: 'Money', displayNumber: '02', folderNumber: '02', color: 'green' },
+  { id: 'Home', displayNumber: '03', folderNumber: '03', color: 'orange' },
+  { id: 'Health', displayNumber: '04', folderNumber: '04', color: 'red' },
+  { id: 'Legal', displayNumber: '05', folderNumber: '05', color: 'purple' },
+  { id: 'School', displayNumber: '06', folderNumber: '06', color: 'cyan' },
+  { id: 'Family', displayNumber: '07', folderNumber: '07', color: 'pink' },
+  { id: 'Clients', displayNumber: '08', folderNumber: '08', color: 'indigo' },
+  { id: 'Projects', displayNumber: '09', folderNumber: '09', color: 'teal' },
+  { id: 'Archive', displayNumber: '10', folderNumber: '10', color: 'slate' },
 ] as const;
 
 // Folder info explanations
@@ -185,7 +187,7 @@ export function DashboardScreen() {
 
   const handleReviewNow = async () => {
     try {
-      await invoke('open_folder', { path: 'Documents/Organized/00_Review' });
+      await invoke('open_folder', { path: 'Organized Files/11 Review' });
     } catch (err) {
       console.error('[Dashboard] Error opening Review folder:', err);
     }
@@ -196,7 +198,8 @@ export function DashboardScreen() {
     if (!folder) return;
 
     try {
-      await invoke('open_folder', { path: `Documents/Organized/${folder.number}_${folderId}` });
+      // Use folderNumber for actual disk path
+      await invoke('open_folder', { path: `Organized Files/${folder.folderNumber} ${folderId}` });
     } catch (err) {
       console.error('[Dashboard] Error opening folder:', err);
     }
@@ -262,24 +265,22 @@ export function DashboardScreen() {
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
       <div className="max-w-3xl w-full mx-auto space-y-8">
+        {/* Dashboard Title */}
+        <h1 className="text-2xl font-semibold">
+          {isSpanish ? 'Panel de AI FileSense' : 'AI FileSense Dashboard'}
+        </h1>
+
         {/* A. Status & Health Summary (Top Strip) */}
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             {needsAttention ? (
-              <>
-                <AlertCircle className="h-6 w-6 text-amber-500" />
-                <h1 className="text-[18px] font-medium text-amber-700 dark:text-amber-300">
-                  {t('dashboard.statusNeedsReview')}
-                </h1>
-              </>
+              <AlertCircle className="h-5 w-5 text-amber-500" />
             ) : (
-              <>
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
-                <h1 className="text-[18px] font-medium text-green-700 dark:text-green-300">
-                  {t('dashboard.statusOrganized')}
-                </h1>
-              </>
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
             )}
+            <span className={`text-[15px] ${needsAttention ? 'text-amber-700 dark:text-amber-300' : 'text-green-700 dark:text-green-300'}`}>
+              {needsAttention ? t('dashboard.statusNeedsReview') : t('dashboard.statusOrganized')}
+            </span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -476,7 +477,7 @@ export function DashboardScreen() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-muted-foreground">
-                          {folder.number}
+                          {folder.displayNumber}
                         </span>
                         <div
                           className={`h-8 w-8 rounded-lg flex items-center justify-center ${

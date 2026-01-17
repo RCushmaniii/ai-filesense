@@ -107,8 +107,6 @@ export function ApplyingChangesScreen() {
       setProgress((prev) => ({ ...prev, total: totalItems }));
 
       try {
-        console.log('[ApplyingChanges] Starting execution, total items:', totalItems);
-
         // Simulate progress updates while executing
         const progressInterval = setInterval(() => {
           setProgress((prev) => {
@@ -129,23 +127,25 @@ export function ApplyingChangesScreen() {
         // Execute the plan
         const result = await invoke<{
           files_moved: number;
-          folders_created: number;
+          files_failed: number;
+          files_skipped: number;
           errors: string[];
+          warnings: string[];
         }>('execute_plan', {
           planId: plan?.id || 'default',
+          stageFirst: true,
+          excludedFileIds: null,
           testMode: state.testMode,
         });
 
         clearInterval(progressInterval);
-
-        console.log('[ApplyingChanges] Execution complete:', result);
 
         // Update final progress
         setProgress({
           current: totalItems,
           total: totalItems,
           filesOrganized: result.files_moved,
-          foldersCreated: result.folders_created,
+          foldersCreated: 0, // Not tracked separately
           errors: result.errors,
         });
 
@@ -157,11 +157,11 @@ export function ApplyingChangesScreen() {
           type: 'COMPLETE_EXECUTION',
           result: {
             filesOrganized: result.files_moved,
-            filesFailed: result.errors.length,
-            filesSkipped: 0,
-            foldersCreated: result.folders_created,
+            filesFailed: result.files_failed,
+            filesSkipped: result.files_skipped,
+            foldersCreated: 0,
             errors: result.errors,
-            warnings: [],
+            warnings: result.warnings,
           },
         });
       } catch (err) {

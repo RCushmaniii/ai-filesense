@@ -1,5 +1,32 @@
 # Lessons Learned
 
+## 2026-01-17: API Key Whitespace Issue (Redux)
+
+### Summary
+API classification failed with "invalid x-api-key" error even though the .env file appeared correct.
+
+### Root Cause
+A space character was embedded at position 81 within the API key value in the .env file. This was likely introduced during copy-paste and was invisible when viewing the file normally.
+
+### Fix Applied
+Updated `lib.rs` to automatically strip ALL whitespace from any environment variable containing "KEY" or "SECRET" in its name:
+
+```rust
+let final_value = if key.contains("KEY") || key.contains("SECRET") {
+    let cleaned: String = value.chars().filter(|c| !c.is_whitespace()).collect();
+    cleaned
+} else {
+    value.to_string()
+};
+```
+
+### Lesson
+- API keys should NEVER contain whitespace - defensively strip it when loading
+- When debugging "invalid key" errors, check the actual byte length and scan for hidden characters
+- Copy-paste from web consoles can introduce invisible characters
+
+---
+
 ## 2026-01-14: The Great .env Debugging Disaster
 
 ### Summary

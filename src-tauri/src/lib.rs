@@ -3,6 +3,7 @@ mod ai;
 pub mod category;
 mod commands;
 mod db;
+mod document_parser;
 pub mod document_type;
 mod recovery;
 mod scanner;
@@ -55,7 +56,14 @@ fn load_env_file(path: &str) -> bool {
 
             // Set environment variable
             if !key.is_empty() {
-                std::env::set_var(key, value);
+                // For API keys, strip ALL whitespace (spaces, tabs, etc.) since keys never contain spaces
+                // This handles copy-paste issues where spaces accidentally get inserted
+                let final_value = if key.contains("KEY") || key.contains("SECRET") {
+                    value.chars().filter(|c| !c.is_whitespace()).collect()
+                } else {
+                    value.to_string()
+                };
+                std::env::set_var(key, &final_value);
             }
         }
     }
@@ -66,23 +74,22 @@ fn load_env_file(path: &str) -> bool {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Load .env file - try multiple locations with our robust parser
+    // When running `npm run tauri dev`, the binary runs from src-tauri/
+    // so we need "../.env" to find the project root .env
     let env_paths = [
         ".env",
         "../.env",
-        "../../.env",  // When running from target/debug
+        "../../.env",
         "../../../.env",
     ];
 
-    let mut loaded = false;
     for path in &env_paths {
         if load_env_file(path) {
-            loaded = true;
             break;
         }
     }
 
     // Silently continue if no .env found - API key may come from settings
-    let _ = loaded;
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -142,6 +149,9 @@ pub fn run() {
             commands::get_files_by_category,
             commands::get_clarification_questions,
             commands::apply_clarification_answer,
+            // File explorer commands
+            commands::open_folder,
+            commands::get_organized_files_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

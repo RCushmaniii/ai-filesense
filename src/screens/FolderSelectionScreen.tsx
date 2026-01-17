@@ -25,7 +25,16 @@ import {
   Shield,
   File,
   FileSpreadsheet,
+  Database,
 } from 'lucide-react';
+
+// Type for scan status from backend
+interface ScanStatus {
+  total_files: number;
+  classified_files: number;
+  pending_classification: number;
+  last_scan_at: string | null;
+}
 
 // Known folder IDs
 const KNOWN_FOLDERS = {
@@ -101,7 +110,24 @@ export function FolderSelectionScreen() {
   const { state, selectFolder, deselectFolder, startScan, dispatch } = useAppState();
   const [knownFolders, setKnownFolders] = useState<KnownFolderInfo[]>([]);
 
+  // DEV ONLY: Use previous scan from database
+  const [usePreviousScan, setUsePreviousScan] = useState(false);
+  const [previousScanStatus, setPreviousScanStatus] = useState<ScanStatus | null>(null);
+
   const isSpanish = language === 'es-MX';
+
+  // Load previous scan status from database
+  useEffect(() => {
+    const loadScanStatus = async () => {
+      try {
+        const status = await invoke<ScanStatus>('get_scan_status');
+        setPreviousScanStatus(status);
+      } catch (error) {
+        console.error('Error loading scan status:', error);
+      }
+    };
+    loadScanStatus();
+  }, []);
 
   // Initialize file type selection state
   const [selectedTypes, setSelectedTypes] = useState<Set<FileTypeId>>(() => {
@@ -231,10 +257,23 @@ export function FolderSelectionScreen() {
     // Save extensions to state
     dispatch({ type: 'SET_SELECTED_EXTENSIONS', extensions });
 
+    // DEV ONLY: Skip scanning and use previous scan from database
+    if (usePreviousScan && previousScanStatus && previousScanStatus.total_files > 0) {
+      // Set scan progress from database
+      dispatch({
+        type: 'UPDATE_SCAN_PROGRESS',
+        progress: {
+          filesFound: previousScanStatus.total_files,
+          totalFiles: previousScanStatus.total_files,
+          filesAnalyzed: previousScanStatus.classified_files,
+        }
+      });
+      // Skip to AI_ANALYZED state
+      dispatch({ type: 'COMPLETE_AI_ANALYSIS' });
+      return;
+    }
+
     if (state.selectedFolders.length > 0 && extensions.length > 0) {
-      console.log('[FolderSelection] Starting scan with:');
-      console.log('  Folders:', state.selectedFolders.map(f => f.path));
-      console.log('  Extensions:', extensions);
       startScan();
     }
   };
@@ -366,20 +405,46 @@ export function FolderSelectionScreen() {
             })}
           </div>
 
-          {/* Coming soon note for other file types */}
-          <p className="text-xs text-muted-foreground text-center">
-            {t('folderSelection.comingSoon')}: .xlsx, .csv, .pptx
-          </p>
         </div>
+
+        {/* DEV ONLY: Use previous scan checkbox */}
+        {previousScanStatus && previousScanStatus.total_files > 0 && (
+          <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+            <CardContent className="p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={usePreviousScan}
+                  onCheckedChange={(checked) => setUsePreviousScan(checked === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="font-medium text-amber-800 dark:text-amber-200">
+                      {isSpanish ? 'Usar escaneo anterior (DEV)' : 'Use previous scan (DEV)'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    {isSpanish
+                      ? `${previousScanStatus.total_files} archivos en la base de datos (${previousScanStatus.classified_files} clasificados)`
+                      : `${previousScanStatus.total_files} files in database (${previousScanStatus.classified_files} classified)`}
+                  </p>
+                </div>
+              </label>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Start scan button */}
         <Button
           size="lg"
           className="w-full h-14 text-lg"
           onClick={handleStartScan}
-          disabled={!canStartScan}
+          disabled={!canStartScan && !usePreviousScan}
         >
-          {t('folderSelection.startScan')}
+          {usePreviousScan
+            ? (isSpanish ? 'Continuar con datos anteriores' : 'Continue with previous data')
+            : t('folderSelection.startScan')}
         </Button>
       </div>
     </div>

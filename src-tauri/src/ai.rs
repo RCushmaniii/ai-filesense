@@ -1,5 +1,4 @@
-use crate::category::{Category, normalize_folder};
-use crate::document_type::DocumentType;
+use crate::category::Category;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -36,11 +35,6 @@ impl AIConfig {
         // Trim any whitespace that might have been included
         let api_key = api_key.trim().to_string();
 
-        // Debug: show key info (safe - only length and prefix)
-        println!("[DEBUG] API key length: {}, starts with: {}",
-            api_key.len(),
-            &api_key.chars().take(10).collect::<String>());
-
         let model = env::var("ANTHROPIC_MODEL")
             .unwrap_or_else(|_| "claude-haiku-4-5-20251001".to_string());
 
@@ -61,16 +55,12 @@ impl AIConfig {
             std::env::var("APPDATA").ok().map(|p| std::path::PathBuf::from(p).join("com.aifileense.app").join("settings.json")),
         ];
 
-        println!("[DEBUG] Looking for settings in:");
         for path_opt in possible_paths.iter().flatten() {
-            println!("[DEBUG]   - {:?} (exists: {})", path_opt, path_opt.exists());
             if path_opt.exists() {
                 if let Ok(contents) = fs::read_to_string(path_opt) {
-                    println!("[DEBUG] Found settings file, parsing...");
                     if let Ok(settings) = serde_json::from_str::<SavedSettings>(&contents) {
                         if let Some(key) = settings.anthropic_api_key {
                             if !key.is_empty() {
-                                println!("[DEBUG] Found API key (length: {})", key.len());
                                 return Some(key);
                             }
                         }
@@ -79,7 +69,6 @@ impl AIConfig {
             }
         }
 
-        println!("[DEBUG] No API key found in settings files");
         None
     }
 }
@@ -242,10 +231,7 @@ impl AIClient {
         &self,
         files: Vec<FileForClassification>,
     ) -> Result<BatchClassificationResult, String> {
-        println!("[DEBUG] AI classify_files called with {} files", files.len());
-
         if files.is_empty() {
-            println!("[DEBUG] No files to classify, returning empty");
             return Ok(BatchClassificationResult {
                 classifications: vec![],
                 tokens_used: 0,
@@ -255,7 +241,6 @@ impl AIClient {
 
         // Build the prompt
         let prompt = self.build_classification_prompt(&files);
-        println!("[DEBUG] Calling Anthropic API...");
 
         // Call Anthropic API
         let request = AnthropicRequest {
@@ -280,16 +265,11 @@ impl AIClient {
 
         if !response.status().is_success() {
             let error_text = response.text().await.unwrap_or_default();
-            println!("[DEBUG] API error: {}", error_text);
             return Err(format!("API error: {}", error_text));
         }
 
-        println!("[DEBUG] API call successful!");
         let response_text_raw = response.text().await
             .map_err(|e| format!("Failed to read API response: {}", e))?;
-
-        println!("[DEBUG] Raw API response length: {}", response_text_raw.len());
-        println!("[DEBUG] Raw API response preview: {}", &response_text_raw.chars().take(500).collect::<String>());
 
         let api_response: AnthropicResponse = serde_json::from_str(&response_text_raw)
             .map_err(|e| format!("Failed to parse API response: {}. Raw: {}", e, &response_text_raw.chars().take(200).collect::<String>()))?;
@@ -301,10 +281,7 @@ impl AIClient {
             .map(|c| c.text.clone())
             .unwrap_or_default();
 
-        println!("[DEBUG] AI response content: {}", &response_text.chars().take(500).collect::<String>());
-
         let classifications = self.parse_classification_response(&response_text, &files)?;
-        println!("[DEBUG] Parsed {} classifications", classifications.len());
 
         let tokens_used = api_response
             .usage
@@ -433,10 +410,10 @@ For categories with null subfolders (Family, Clients, Projects), create dynamic 
 | Score | Criteria |
 |-------|----------|
 | 0.80-0.98 | Clear category keyword in content + filename reinforces |
-| 0.60-0.79 | Reasonable guess from filename or partial content match |
-| 0.50-0.59 | Uncertain - file should go to Review |
+| 0.50-0.79 | Reasonable guess from filename or partial content match |
+| 0.35-0.49 | Uncertain - file should go to Review |
 
-**CRITICAL**: If confidence < 0.60, set category to "Review"
+**CRITICAL**: If confidence < 0.35, set category to "Review"
 
 ### FOLDER STRUCTURE
 Pattern: `Category/Subcategory` (max 2 levels)
@@ -460,7 +437,7 @@ Examples:
 1. Return ONLY the JSON object—no markdown, no explanation
 2. Validate all file_ids are preserved exactly
 3. Ensure every category value exists in CATEGORIES
-4. If confidence < 0.60, category MUST be "Review"
+4. If confidence < 0.35, category MUST be "Review"
 
 FILES TO CLASSIFY:
 {file_list}"#,
@@ -632,11 +609,6 @@ impl AIClient {
         low_confidence_files: &[FileSummary],
         ambiguous_groups: &[Vec<FileSummary>],
     ) -> Result<QuestionGenerationResult, String> {
-        println!("[DEBUG] AI generate_clarification_questions called");
-        println!("[DEBUG] - {} category stats", category_stats.len());
-        println!("[DEBUG] - {} low confidence files", low_confidence_files.len());
-        println!("[DEBUG] - {} ambiguous groups", ambiguous_groups.len());
-
         // Build the dynamic system prompt
         let prompt = self.build_question_generation_prompt(
             personalization,
@@ -644,8 +616,6 @@ impl AIClient {
             low_confidence_files,
             ambiguous_groups,
         );
-
-        println!("[DEBUG] Generated prompt length: {} chars", prompt.len());
 
         // Call Anthropic API
         let request = AnthropicRequest {
@@ -670,14 +640,11 @@ impl AIClient {
 
         if !response.status().is_success() {
             let error_text = response.text().await.unwrap_or_default();
-            println!("[DEBUG] API error: {}", error_text);
             return Err(format!("API error: {}", error_text));
         }
 
         let response_text_raw = response.text().await
             .map_err(|e| format!("Failed to read API response: {}", e))?;
-
-        println!("[DEBUG] Raw API response length: {}", response_text_raw.len());
 
         let api_response: AnthropicResponse = serde_json::from_str(&response_text_raw)
             .map_err(|e| format!("Failed to parse API response: {}", e))?;
@@ -688,11 +655,8 @@ impl AIClient {
             .map(|c| c.text.clone())
             .unwrap_or_default();
 
-        println!("[DEBUG] AI response content preview: {}", &response_text.chars().take(500).collect::<String>());
-
         // Parse the questions from AI response
         let questions = self.parse_question_response(&response_text)?;
-        println!("[DEBUG] Parsed {} questions", questions.len());
 
         let tokens_used = api_response
             .usage

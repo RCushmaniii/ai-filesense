@@ -119,16 +119,12 @@ export function QuickFixesScreen() {
         archive_policy: state.personalization.archivePolicy,
       };
 
-      console.log('[QuickFixes] Calling get_clarification_questions with:', personalization);
-
       const result = await invoke<ClarificationQuestion[]>('get_clarification_questions', {
         personalization,
       });
 
-      console.log('[QuickFixes] Received questions:', result);
       setQuestions(result);
     } catch (err) {
-      console.error('[QuickFixes] Error loading questions:', err);
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
@@ -174,9 +170,8 @@ export function QuickFixesScreen() {
           fileIds: currentQuestion.affected_file_ids,
           targetCategory: option.target_category,
         });
-        console.log('[QuickFixes] Applied answer for question:', currentQuestion.id);
-      } catch (err) {
-        console.error('[QuickFixes] Error applying answer:', err);
+      } catch {
+        // Silently continue if answer application fails
       }
     }
 
@@ -215,8 +210,8 @@ export function QuickFixesScreen() {
             fileIds: currentQuestion.affected_file_ids,
             targetCategory: firstOption.target_category,
           });
-        } catch (err) {
-          console.error('[QuickFixes] Error applying multi-select answer:', err);
+        } catch {
+          // Silently continue if answer application fails
         }
       }
 
@@ -242,8 +237,8 @@ export function QuickFixesScreen() {
           fileIds: currentQuestion.affected_file_ids,
           targetCategory: null, // Text answers don't change category directly
         });
-      } catch (err) {
-        console.error('[QuickFixes] Error applying text answer:', err);
+      } catch {
+        // Silently continue if answer application fails
       }
 
       setTextInputValue('');
@@ -275,9 +270,55 @@ export function QuickFixesScreen() {
     }
   };
 
-  const handleContinue = () => {
-    // Navigate to Applying Changes (Screen 8)
-    dispatch({ type: 'COMPLETE_CLARIFICATIONS' });
+  const handleContinue = async () => {
+    // Generate the organization plan before navigating to execution
+    try {
+      // Map folderDepth to organization style:
+      // - 'flat' -> 'simple' (main categories only)
+      // - 'moderate' -> 'simple' (categories + basic subcategories)
+      // - 'detailed' -> 'smart_groups' (full AI-suggested paths with projects/clients)
+      let style = 'simple';
+      if (state.personalization.folderDepth === 'detailed') {
+        style = 'smart_groups';
+      } else if (state.personalization.lookupStyle === 'time') {
+        style = 'timeline';
+      }
+
+      const plan = await invoke<{
+        id: string;
+        name: string;
+        style: string;
+        items: Array<{
+          file_id: number;
+          source_path: string;
+          destination_path: string;
+          confidence: number;
+          reason: string;
+          requires_review: boolean;
+        }>;
+        summary: {
+          total_files: number;
+          high_confidence: number;
+          low_confidence: number;
+          duplicates_found: number;
+          folders_to_create: string[];
+        };
+      }>('generate_organization_plan', {
+        style,
+        basePath: null, // Use default Documents/Organized Files
+        folderDepth: state.personalization.folderDepth, // Pass to backend
+      });
+
+      // Store the plan in state
+      dispatch({ type: 'SET_CURRENT_PLAN', plan });
+
+      // Navigate to Applying Changes (Screen 8)
+      dispatch({ type: 'COMPLETE_CLARIFICATIONS' });
+    } catch (error) {
+      console.error('Error generating plan:', error);
+      // Still continue to execution - it will handle the error
+      dispatch({ type: 'COMPLETE_CLARIFICATIONS' });
+    }
   };
 
   // Loading state

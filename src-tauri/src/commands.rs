@@ -830,10 +830,17 @@ fn categorize_by_extension(extension: Option<&str>, filename: &str) -> (String, 
 pub async fn generate_organization_plan(
     style: OrganizationStyle,
     base_path: Option<String>,
+    folder_depth: Option<String>,
     db_path: State<'_, DbPath>,
 ) -> Result<OrganizationPlan, String> {
     let db_path_clone = db_path.0.clone();
     let style_clone = style.clone();
+
+    // Folder depth controls how many levels of subfolders to create:
+    // - "flat": Only main category folders (e.g., "01 Work")
+    // - "moderate": Category + subcategory (e.g., "01 Work/Resumes")
+    // - "detailed": Full AI-suggested paths with projects/clients
+    let depth = folder_depth.unwrap_or_else(|| "moderate".to_string());
 
     // Determine base path for organized files
     let organize_base = base_path.unwrap_or_else(|| {
@@ -899,8 +906,6 @@ pub async fn generate_organization_plan(
     let mut low_confidence = 0;
     let mut skipped_organized = 0;
 
-    println!("[DEBUG] Total files from DB: {}", files_with_metadata.len());
-
     for (file_id, source_path, filename, extension, modified_at, category, subcategory, confidence, suggested_path) in files_with_metadata {
         // Skip files that are already in an "Organized Files" folder
         // This prevents re-organizing already organized files on subsequent runs
@@ -916,11 +921,15 @@ pub async fn generate_organization_plan(
             categorize_by_extension(extension.as_deref(), &filename)
         };
 
-        // Generate destination path based on style
+        // Generate destination path based on style AND folder_depth
         let dest_folder = match &style_clone {
             OrganizationStyle::Simple => {
-                // Use category and subcategory for folder structure
-                if let Some(subcat) = &effective_subcategory {
+                // Apply folder_depth setting:
+                // - "flat": Only main category
+                // - "moderate"/"detailed": Category + subcategory
+                if depth == "flat" {
+                    effective_category.clone()
+                } else if let Some(subcat) = &effective_subcategory {
                     format!("{}/{}", effective_category, subcat)
                 } else {
                     effective_category.clone()
@@ -940,19 +949,30 @@ pub async fn generate_organization_plan(
                     "Older".to_string()
                 };
 
-                // Combine year with category structure
-                if let Some(subcat) = &effective_subcategory {
+                // Apply folder_depth to timeline as well
+                if depth == "flat" {
+                    format!("{}/{}", year, effective_category)
+                } else if let Some(subcat) = &effective_subcategory {
                     format!("{}/{}/{}", year, effective_category, subcat)
                 } else {
                     format!("{}/{}", year, effective_category)
                 }
             }
             OrganizationStyle::SmartGroups => {
-                // Use AI suggested path or fall back to category-based
-                if let Some(suggested) = &suggested_path {
-                    suggested.clone()
+                // For "detailed" depth, use AI suggested path (includes project/client names)
+                // For other depths, fall back to category-based structure
+                if depth == "detailed" {
+                    if let Some(suggested) = &suggested_path {
+                        suggested.clone()
+                    } else if let Some(subcat) = &effective_subcategory {
+                        format!("{}/{}", effective_category, subcat)
+                    } else {
+                        effective_category.clone()
+                    }
+                } else if depth == "flat" {
+                    effective_category.clone()
                 } else {
-                    // Use effective category from rule-based or AI classification
+                    // moderate
                     if let Some(subcat) = &effective_subcategory {
                         format!("{}/{}", effective_category, subcat)
                     } else {
@@ -969,9 +989,9 @@ pub async fn generate_organization_plan(
         folders_to_create.insert(folder_path);
 
         // Determine if review is needed
-        // - Low AI confidence (<0.6)
+        // - Low AI confidence (<0.35) - lowered from 0.6 to reduce "needs review" count
         // - Rule-based classification to "Other" category
-        let requires_review = (category.is_some() && confidence < 0.6) ||
+        let requires_review = (category.is_some() && confidence < 0.35) ||
             (category.is_none() && effective_category == "Other");
 
         // Adjust confidence for rule-based classification
@@ -1050,9 +1070,7 @@ pub async fn generate_organization_plan(
 
     let folders_vec: Vec<String> = folders_to_create.into_iter().collect();
     let total_files = items.len();
-
-    println!("[DEBUG] Skipped (already organized): {}", skipped_organized);
-    println!("[DEBUG] Items in plan: {}", total_files);
+    let _ = skipped_organized; // Suppress unused warning
 
     Ok(OrganizationPlan {
         id: plan_id,
@@ -1194,10 +1212,12 @@ pub async fn execute_plan(
     plan_id: String,
     stage_first: Option<bool>,
     excluded_file_ids: Option<Vec<i64>>,
+    test_mode: Option<bool>,
     db_path: State<'_, DbPath>,
 ) -> Result<ExecutionResult, String> {
     let db_path_clone = db_path.0.clone();
     let _use_staging = stage_first.unwrap_or(true);
+    let is_test_mode = test_mode.unwrap_or(false);
     let excluded: std::collections::HashSet<i64> = excluded_file_ids
         .unwrap_or_default()
         .into_iter()
@@ -1295,6 +1315,19 @@ pub async fn execute_plan(
             }
         };
         let final_dest_path = final_dest.to_string_lossy().to_string();
+
+        // Test mode: simulate the move without actually doing it
+        if is_test_mode {
+            // In test mode, just count as successful without moving
+            if let Ok(conn) = Connection::open(&db_path_clone) {
+                conn.execute(
+                    "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
+                    rusqlite::params![&plan_id, file_id],
+                ).ok();
+            }
+            files_moved += 1;
+            continue;
+        }
 
         // Attempt to move the file
         let move_result = std::fs::rename(&source, &final_dest);
@@ -1871,8 +1904,6 @@ pub async fn get_clarification_questions(
     personalization: PersonalizationInput,
     db_path: State<'_, DbPath>,
 ) -> Result<Vec<ClarificationQuestion>, String> {
-    println!("[DEBUG] get_clarification_questions called with personalization: {:?}", personalization);
-
     let db_path_clone = db_path.0.clone();
 
     // Step 1: Gather file data from database (sync block)
@@ -1938,24 +1969,17 @@ pub async fn get_clarification_questions(
         (category_stats, low_confidence_files, ambiguous_groups)
     };
 
-    println!("[DEBUG] Found {} category stats, {} low confidence files, {} ambiguous groups",
-        category_stats.len(), low_confidence_files.len(), ambiguous_groups.len());
-
     // Step 2: Check if we have enough data to warrant questions
     let total_low_confidence = category_stats.iter()
         .map(|s| s.low_confidence_count)
         .sum::<i64>();
 
     if total_low_confidence == 0 && ambiguous_groups.is_empty() {
-        println!("[DEBUG] No clarification needed - all files have high confidence");
         return Ok(Vec::new());
     }
 
     // Step 3: Call AI to generate questions
-    let config = AIConfig::from_env().map_err(|e| {
-        println!("[DEBUG] AI config error: {}", e);
-        e
-    })?;
+    let config = AIConfig::from_env()?;
 
     let client = AIClient::new(config);
 
@@ -1973,9 +1997,6 @@ pub async fn get_clarification_questions(
         &low_confidence_files,
         &ambiguous_groups,
     ).await?;
-
-    println!("[DEBUG] AI generated {} questions, used {} tokens",
-        result.questions.len(), result.tokens_used);
 
     // Convert AI questions to command response format
     let questions: Vec<ClarificationQuestion> = result.questions
@@ -2086,6 +2107,7 @@ fn find_ambiguous_groups(conn: &Connection) -> Result<Vec<Vec<AIFileSummary>>, S
 }
 
 /// Helper: Translate category name to Spanish
+#[allow(dead_code)]
 fn translate_category(category: &str) -> String {
     match category {
         "Work" => "Trabajo".to_string(),
@@ -2134,6 +2156,71 @@ fn extract_project_name_suggestion(filenames: &[String]) -> Option<String> {
     } else {
         None
     }
+}
+
+/// Get the path to the Organized Files folder
+#[tauri::command]
+pub fn get_organized_files_path() -> Result<String, String> {
+    let organized_path = dirs::document_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("C:\\"))
+        .join("Organized Files");
+    Ok(organized_path.to_string_lossy().to_string())
+}
+
+/// Open a folder in the system file explorer
+#[tauri::command]
+pub async fn open_folder(path: String) -> Result<(), String> {
+    // Resolve special paths
+    let full_path = if path.starts_with("Documents/Organized") || path == "Organized Files" {
+        // Get the Documents\Organized Files path
+        let base = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("C:\\Documents"));
+
+        if path == "Organized Files" {
+            base.join("Organized Files")
+        } else {
+            // path like "Documents/Organized/00_Review"
+            let subfolder = path.strip_prefix("Documents/").unwrap_or(&path);
+            base.join(subfolder)
+        }
+    } else if path == "Documents" {
+        dirs::document_dir().unwrap_or_else(|| std::path::PathBuf::from("C:\\Documents"))
+    } else {
+        // Absolute path
+        std::path::PathBuf::from(&path)
+    };
+
+    // Create directory if it doesn't exist
+    if !full_path.exists() {
+        std::fs::create_dir_all(&full_path).ok();
+    }
+
+    // Open in Windows Explorer
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(&full_path)
+            .spawn()
+            .map_err(|e| format!("Failed to open folder: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&full_path)
+            .spawn()
+            .map_err(|e| format!("Failed to open folder: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&full_path)
+            .spawn()
+            .map_err(|e| format!("Failed to open folder: {}", e))?;
+    }
+
+    Ok(())
 }
 
 /// Apply clarification answer to update file categories

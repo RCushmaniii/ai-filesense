@@ -2,7 +2,8 @@
   "app": {
     "name": "AI FileSense",
     "tagline": "AI-powered file organization",
-    "footerPrivacy": "Your files stay local — only metadata is processed"
+    "footerPrivacy": "Your files stay local — only metadata is processed",
+    "startOver": "Start new organization"
   },
   "welcome": {
     "title": "Organize your files with AI",
@@ -44,8 +45,9 @@
     "fileTypesSubtitle": "Select the file types you want to organize",
     "fileTypes": {
       "pdf": "PDF files",
-      "txt": "Text files",
-      "word": "Word documents"
+      "txt": "Text & Markdown",
+      "word": "Word documents",
+      "powerpoint": "PowerPoint presentations"
     },
     "comingSoon": "Coming in next release",
     "startScan": "Scan my documents",
@@ -180,7 +182,7 @@
   "results": {
     "title": "Here's what we found",
     "ready": "Ready to organize",
-    "documentsFound": "We found {count} documents ready to organize",
+    "documentsFound": "We found {count} files to organize",
     "documentsInto": "documents into",
     "documents": "documents",
     "folders": "folders",
@@ -196,7 +198,7 @@
       "timeline": "Timeline",
       "smart_groups": "Smart Groups"
     },
-    "needsReview": "documents need review (low confidence)",
+    "needsReview": "files need manual review before placing into a specific folder",
     "reviewChanges": "Review Changes"
   },
   "organizationStyles": {
@@ -442,7 +444,7 @@
     "autoArchive": "Archive older files automatically",
     "autoArchiveDesc": "Files older than 3 years are moved to Archive.",
     "activityTitle": "What changed recently",
-    "noRecentActivity": "No recent activity to show.",
+    "noRecentActivity": "When files are organized, moved, or archived, you'll see those changes listed here with timestamps and details.",
     "undoLastOrganization": "Undo last organization",
     "folderInfo": {
       "review": {

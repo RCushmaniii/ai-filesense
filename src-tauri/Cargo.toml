@@ -1,6 +1,6 @@
 [package]
 name = "ai-filesense"
-version = "0.1.0"
+version = "1.0.0"
 description = "AI-powered file organization and search"
 authors = ["AI FileSense"]
 edition = "2021"
@@ -28,6 +28,8 @@ tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.12", features = ["json"] }
 thiserror = "1"
 uuid = { version = "1", features = ["v4"] }
+dirs = "5"
+dotenvy = "0.15"
 
 [profile.dev]
 incremental = true

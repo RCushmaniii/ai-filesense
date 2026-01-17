@@ -1,19 +1,24 @@
 # AI FileSense
 
-AI-powered local file organization and search for Windows.
+AI-powered local file organization for Windows.
+
+## Localization
+
+This app is **bilingual**: English + Spanish (Mexico). All user-facing strings must be in `src/i18n/`.
 
 ## Project Overview
 
 **Core Principle**: LLM does interpretation. The app does execution.
 
+**Freemium Model**: The developer provides the Anthropic API key via environment variable. Users do NOT need to configure API keys - this reduces friction and makes the app accessible to non-technical users.
+
 Pipeline:
 1. Scan fast (local, deterministic)
 2. Sample content (small, controlled extracts)
-3. LLM classification (batched, cached, incremental)
+3. LLM classification using Claude Haiku (batched, cached, incremental)
 4. User chooses structure (in plain English, with preview)
 5. Planner generates a move plan (JSON manifest + DB record)
 6. Executor moves files safely (staging + transaction log + undo)
-7. Search stays amazing forever (semantic + "used to be on Desktop")
 
 ## Tech Stack
 
@@ -21,8 +26,12 @@ Pipeline:
 - **Backend**: Rust (file engine: scanning, hashing, reading snippets, move/undo)
 - **Frontend**: React + TypeScript + Vite
 - **UI Components**: shadcn/ui + Tailwind CSS
-- **Database**: SQLite with FTS5 for full-text search
-- **AI Providers**: OpenAI or Anthropic API (user configurable)
+- **Database**: SQLite for file index and AI metadata
+- **AI Provider**: Anthropic Claude Haiku (API key provided by developer via .env)
+
+## Related Repositories
+
+- **Marketing Website**: Separate repo (TBD) - will host landing page, download links, privacy policy, changelog. This repo is desktop app only.
 
 ## Project Structure
 
@@ -30,19 +39,22 @@ Pipeline:
 ai-filesense/
 ├── src/                    # React frontend
 │   ├── components/         # UI components (shadcn/ui based)
-│   ├── hooks/              # React hooks
-│   ├── lib/                # Utilities (cn, api client, etc.)
-│   ├── pages/              # Route pages
-│   └── App.tsx             # Main app component
+│   ├── i18n/               # Internationalization (en.json, es-MX.json)
+│   ├── screens/            # App screens (Welcome, FolderSelection, Scanning, etc.)
+│   ├── store/              # State management (appState.tsx)
+│   ├── lib/                # Utilities (cn, etc.)
+│   └── App.tsx             # Main app component with routing
 ├── src-tauri/              # Rust backend
 │   ├── src/
+│   │   ├── ai.rs           # AI client (Anthropic Claude integration)
 │   │   ├── commands.rs     # Tauri command handlers
 │   │   ├── db.rs           # SQLite database operations
 │   │   ├── scanner.rs      # File system scanning
-│   │   ├── lib.rs          # Library entry point
+│   │   ├── lib.rs          # Library entry point (.env loading)
 │   │   └── main.rs         # Application entry point
 │   ├── Cargo.toml          # Rust dependencies
 │   └── tauri.conf.json     # Tauri configuration
+├── .env                    # Environment variables (ANTHROPIC_API_KEY)
 └── package.json            # Node dependencies
 ```
 
@@ -76,12 +88,11 @@ SQLite database located at: `%APPDATA%/com.aifileense.app/filesense.db`
 
 **Core Tables**:
 - `files` - File index with path, metadata, hash
-- `ai_metadata` - AI classification results (category, tags, summary, confidence)
+- `ai_metadata` - AI classification results (category, subcategory, tags, summary, confidence, suggested_folder)
 - `content_snippets` - Extracted text for AI processing
 - `move_history` - Transaction log for undo support
 - `organization_plans` - Generated organization plans
 - `plan_items` - Individual file moves within a plan
-- `files_fts` - FTS5 virtual table for full-text search
 
 ## Key Design Decisions
 
@@ -92,11 +103,17 @@ SQLite database located at: `%APPDATA%/com.aifileense.app/filesense.db`
 5. **Staging mode**: Optional staging before final moves (recommended)
 6. **No full drive scans by default**: Desktop + Documents + Downloads only
 
-## AI Integration Points
+## AI Integration
 
-- `src-tauri/src/commands.rs`: `generate_organization_plan` - calls AI for classification
-- AI receives: filename, metadata, small text snippet
-- AI returns: category, subcategory, tags, confidence, summary, suggested path
+- **API Key**: Loaded from `.env` file (`ANTHROPIC_API_KEY`) at startup in `lib.rs`
+- **AI Client**: `src-tauri/src/ai.rs` - Anthropic Claude Haiku integration
+- **Classification**: `src-tauri/src/commands.rs`: `classify_files` - calls AI for batch classification
+- **AI receives**: file_id, filename, extension, size, created_at, modified_at, snippet
+- **AI returns**: category, subcategory, tags, confidence, summary, suggested_folder
+
+**Categories**: Documents, Images, Media, Spreadsheets, Code, Archives, Medical, Financial, Legal, Personal, Work, School, Other
+
+**File Types Supported**: PDF (.pdf), Text (.txt), Word (.doc, .docx)
 
 ## Testing
 

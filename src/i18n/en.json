@@ -1,0 +1,527 @@
+{
+  "app": {
+    "name": "AI FileSense",
+    "tagline": "AI-powered file organization",
+    "footerPrivacy": "Your files stay local — only metadata is processed"
+  },
+  "welcome": {
+    "title": "Organize your files with AI",
+    "subtitle": "Stop searching. Start finding.",
+    "getStarted": "Get Started",
+    "selectLanguage": "Select language",
+    "trustFilesLocal": "Your files stay on your computer",
+    "trustFilesLocalDesc": "Only filenames are analyzed. Content never leaves your device.",
+    "trustApproval": "You approve every change",
+    "trustApprovalDesc": "Nothing moves without your permission. You review everything first.",
+    "trustUndo": "Undo is always available",
+    "trustUndoDesc": "If you change your mind, one click restores everything."
+  },
+  "home": {
+    "welcome": "What would you like to do?",
+    "findFile": "Find a file",
+    "findFileDesc": "Search by describing what you remember",
+    "cleanUp": "Clean up my Desktop",
+    "cleanUpDesc": "Organize files with AI assistance",
+    "recentActivity": "Recent Activity",
+    "noRecentActivity": "No recent activity yet"
+  },
+  "fileTypes": {
+    "title": "What types of files do you want to organize?",
+    "subtitle": "Select the document types you'd like FileSense to help organize.",
+    "safetyNote": "We'll only look at files matching these types. Your other files won't be touched."
+  },
+  "folderSelection": {
+    "title": "Choose folders to scan",
+    "fileTypesSelected": "File types to scan",
+    "subtitle": "Select which folders you'd like to organize",
+    "explanation": "To help you find and organize files, FileSense needs to look at where your documents live.",
+    "safetyNote": "We only scan the folders you choose. Nothing is moved without your approval.",
+    "desktop": "Desktop",
+    "documents": "Documents",
+    "downloads": "Downloads",
+    "addFolder": "Add another folder",
+    "fileTypesTitle": "What types of files?",
+    "fileTypesSubtitle": "Select the file types you want to organize",
+    "fileTypes": {
+      "pdf": "PDF files",
+      "txt": "Text files",
+      "word": "Word documents"
+    },
+    "comingSoon": "Coming in next release",
+    "startScan": "Scan my documents",
+    "counting": "Counting files...",
+    "filesFound": "About {count} documents to organize",
+    "selectFoldersPrompt": "Select folders to see estimate",
+    "scansRemaining": "{count} free scans remaining",
+    "overFileLimit": "Free tier allows {limit} files per scan. Select fewer folders or upgrade.",
+    "outOfScans": "You've used all your free scans",
+    "upgradeToScan": "Upgrade to continue organizing your files"
+  },
+  "scanning": {
+    "title": "Scanning your files",
+    "finding": "Finding files...",
+    "filesFound": "{count} files found",
+    "analyzing": "Analyzing {current} of {total} files",
+    "understanding": "Understanding your documents...",
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "paused": "Scan paused. Click resume to continue.",
+    "status": {
+      "analyzing_names": "Analyzing file names and folder structure to understand how you work.",
+      "identifying_types": "Identifying document types so similar files can be grouped together.",
+      "learning_relationships": "Learning relationships between files to improve organization accuracy.",
+      "mapping_patterns": "Mapping common patterns across your folders.",
+      "reviewing_metadata": "Reviewing file metadata to understand age and relevance.",
+      "building_model": "Building a mental model of how your documents connect.",
+      "preparing_suggestions": "Preparing smarter suggestions as more files are analyzed.",
+      "improving_accuracy": "Improving accuracy with every batch of files processed.",
+      "extracting_metadata": "Extracting metadata and semantic signals from documents.",
+      "classifying_files": "Classifying files using multiple heuristics.",
+      "detecting_topics": "Running lightweight content analysis to detect topics.",
+      "scoring_similarity": "Scoring similarity between related documents.",
+      "detecting_duplicates": "Detecting duplicates and near-duplicates.",
+      "inferring_projects": "Inferring project groupings based on file proximity.",
+      "no_changes_yet": "No changes have been made yet — this is analysis only.",
+      "files_remain": "All files remain exactly where they are.",
+      "processing_batches": "Processing documents in small batches for accuracy.",
+      "local_only": "Your files are analyzed locally and never uploaded.",
+      "nothing_moved": "Nothing will be moved without your approval.",
+      "read_only": "This step is read-only — no changes yet.",
+      "you_control": "You're always in control of what happens next.",
+      "stop_anytime": "You can stop this process at any time.",
+      "cleaner_folders": "This helps us suggest cleaner, simpler folders.",
+      "better_analysis": "Better analysis leads to fewer clicks later.",
+      "fits_how_you_work": "We're preparing a structure that fits how you work.",
+      "faster_searches": "The goal: faster searches and less clutter.",
+      "smarter_grouping": "Smarter grouping starts here.",
+      "recurring_patterns": "We're noticing recurring document patterns.",
+      "belong_together": "Some files clearly belong together.",
+      "active_folders": "Certain folders are more active than others.",
+      "naming_conventions": "Naming conventions vary more than expected.",
+      "opportunities_clear": "Organization opportunities are becoming clear."
+    }
+  },
+  "personalization": {
+    "questionOf": "Question {current} of {total}",
+    "finish": "Finish",
+    "q1": {
+      "title": "Which best describes you when using this computer?",
+      "hint": "Select all that apply",
+      "options": {
+        "parent": "Parent / Family admin",
+        "student": "Student",
+        "teacher": "Teacher / Professor",
+        "office": "Office employee",
+        "freelancer": "Freelancer / Consultant",
+        "business": "Small business owner",
+        "retired": "Retired",
+        "creative": "Content Creator"
+      }
+    },
+    "q2": {
+      "title": "When you need to find a file, how do you usually think about it?",
+      "options": {
+        "topic": {
+          "label": "By folder or topic",
+          "desc": "\"What folder is my file in?\""
+        },
+        "time": {
+          "label": "By time",
+          "desc": "\"When did I create that file?\""
+        },
+        "project": {
+          "label": "By project or person",
+          "desc": "\"What project did that file belong to?\""
+        }
+      }
+    },
+    "q3": {
+      "title": "How detailed should your folder structure be?",
+      "options": {
+        "flat": {
+          "label": "Keep it simple",
+          "desc": "Mostly show just the top folders (11 main categories)"
+        },
+        "moderate": {
+          "label": "Some subfolders",
+          "desc": "Organize major topics (Money/Taxes, Health/Insurance, etc.)"
+        },
+        "detailed": {
+          "label": "Fully organized",
+          "desc": "Create subfolders for detected projects, clients, and topics"
+        }
+      }
+    },
+    "q4": {
+      "title": "What should happen to older documents (3+ years)?",
+      "options": {
+        "keep": {
+          "label": "Keep them with current files",
+          "desc": "Old files stay in their proper category folders"
+        },
+        "archive": {
+          "label": "Move to Archive by year",
+          "desc": "Organize old files into Archive/2023, Archive/2022, etc."
+        }
+      }
+    }
+  },
+  "location": {
+    "title": "Where are your documents?",
+    "files": "files",
+    "addFolder": "Add folder...",
+    "addFolderTitle": "Select a folder to scan",
+    "includeSubfolders": "Include subfolders",
+    "estimated": "Estimated",
+    "documentsToOrganize": "documents to organize",
+    "scanNow": "Scan Now"
+  },
+  "results": {
+    "title": "Here's what we found",
+    "ready": "Ready to organize",
+    "documentsFound": "We found {count} documents ready to organize",
+    "documentsInto": "documents into",
+    "documents": "documents",
+    "folders": "folders",
+    "duplicates": "duplicates",
+    "howToOrganize": "How would you like them organized?",
+    "createPlan": "Create organization plan",
+    "generatingPlan": "Creating your plan...",
+    "testMode": "Test Mode (Preview Only)",
+    "testModeDescription": "See what would happen without actually moving any files. Perfect for trying it out first.",
+    "modeLabel": "Organization Mode:",
+    "modes": {
+      "simple": "Simple",
+      "timeline": "Timeline",
+      "smart_groups": "Smart Groups"
+    },
+    "needsReview": "documents need review (low confidence)",
+    "reviewChanges": "Review Changes"
+  },
+  "organizationStyles": {
+    "title": "How would you like to organize?",
+    "subtitle": "Each style creates a different folder structure. All use numbered folders (01-11) for consistent sorting.",
+    "simple": {
+      "name": "Life Areas",
+      "description": "Groups files into 11 smart folders: Work, Money, Home, Health, Legal, School, Family & Friends, Clients, Projects, Archive, and Review.",
+      "bestFor": "Personal & family files"
+    },
+    "timeline": {
+      "name": "Timeline",
+      "description": "Groups files by year with quarterly subfolders. Perfect for finding documents by when they were created.",
+      "bestFor": "Chronological archives"
+    },
+    "smartGroups": {
+      "name": "Smart Groups",
+      "description": "Groups files by detected clients, projects, and entities. AI finds company and project names in your documents.",
+      "bestFor": "Freelancers & business"
+    },
+    "continueToPreview": "Continue to preview",
+    "generatingPlan": "Generating plan..."
+  },
+  "planPreview": {
+    "title": "Review your organization plan",
+    "filesWillMove": "{count} files will be moved",
+    "lowConfidence": "{count} items need your review",
+    "duplicates": "{count} duplicates found",
+    "stageFirst": "Stage first (recommended)",
+    "stageDescription": "Files move to a staging folder before final location",
+    "showAll": "Show all files",
+    "showLowConfidence": "Show items needing review",
+    "currentLocation": "Current location",
+    "newLocation": "New location",
+    "confidence": "Confidence",
+    "confidenceHigh": "High",
+    "confidenceMedium": "Medium",
+    "confidenceLow": "Low",
+    "approve": "Approve",
+    "reject": "Keep in place",
+    "execute": "Organize my files",
+    "cancel": "Cancel"
+  },
+  "executing": {
+    "title": "Organizing your files",
+    "moving": "Moving {current} of {total}",
+    "complete": "Organization complete!",
+    "filesMoved": "{count} files organized",
+    "desktopCleaned": "Desktop cleaned",
+    "viewResults": "View results",
+    "undo": "Undo changes",
+    "undoLastRun": "Undo last run",
+    "searchFiles": "Search your files"
+  },
+  "search": {
+    "placeholder": "Describe what you're looking for...",
+    "examples": "Try: \"that insurance pdf from last year\" or \"photos from vacation\"",
+    "filters": "Filters",
+    "wasOnDesktop": "Used to be on Desktop",
+    "fileType": "File type",
+    "dateRange": "Date range",
+    "results": "{count} files found",
+    "noResults": "No files match your search",
+    "currentLocation": "Current location",
+    "previousLocation": "Previously at",
+    "open": "Open",
+    "showInFolder": "Show in folder"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "Enter your Anthropic API key",
+    "apiKeyHelp": "Get your key at console.anthropic.com",
+    "save": "Save",
+    "saved": "Settings saved",
+    "testConnection": "Test connection",
+    "connectionSuccess": "Connected successfully",
+    "connectionFailed": "Connection failed"
+  },
+  "aiCredits": {
+    "title": "AI Credits",
+    "remaining": "Credits remaining",
+    "usedThisWeek": "Used this week",
+    "whatAreCredits": "What are AI credits?",
+    "explanation": "FileSense uses advanced AI to read and understand your documents. AI processing has a real cost, so FileSense uses prepaid AI credits.",
+    "control": "You are always in control:",
+    "controlPoints": [
+      "You can see how many credits you've used",
+      "Nothing is processed without your approval",
+      "You can add credits at any time"
+    ],
+    "addCredits": "Add credits",
+    "lowWarning": "You have {count} AI credits remaining. FileSense will continue to work, but new AI analysis will pause.",
+    "estimatedCost": "This action will use approximately {count} AI credits"
+  },
+  "stepper": {
+    "stepOf": "Step {current} of {total}",
+    "steps": {
+      "folders": "Choose Folders",
+      "scan": "Scanning",
+      "personalize": "Personalize",
+      "results": "Results",
+      "review": "Review",
+      "clarify": "Clarify",
+      "apply": "Apply",
+      "success": "Done"
+    }
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Try again",
+    "files": "files",
+    "folders": "folders"
+  },
+  "errors": {
+    "scanFailed": "Failed to scan files",
+    "classificationFailed": "Failed to classify files",
+    "moveFailed": "Failed to move files",
+    "apiKeyRequired": "Please add your API key in settings",
+    "apiKeyInvalid": "Invalid API key",
+    "networkError": "Network error. Please check your connection.",
+    "networkUnavailable": "Network unavailable",
+    "aiTimeout": "AI provider did not respond. Please try again.",
+    "partialSuccess": "Some files could not be processed"
+  },
+  "footer": {
+    "allRightsReserved": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "website": "Website"
+  },
+  "activityLog": {
+    "title": "Activity Log",
+    "session": "Organization Session",
+    "noSessions": "No organization sessions yet. Your activity will appear here after you organize files.",
+    "noDetails": "Could not load session details",
+    "filesOrganized": "files organized",
+    "successful": "Successful",
+    "failed": "Failed",
+    "undone": "Undone",
+    "errors": "Errors",
+    "undoAll": "Undo All",
+    "export": "Export Log"
+  },
+  "detailedReview": {
+    "title": "Review & Exclusions",
+    "lastChance": "This is your last chance to exclude files before organization begins.",
+    "excludedRemainUntouched": "Excluded files will remain exactly where they are — we won't touch them.",
+    "folders": "Folders",
+    "selectFolder": "Select a folder to view files",
+    "excluded": "Excluded",
+    "folderExcluded": "Entire folder excluded",
+    "filesExcluded": "files excluded",
+    "willBeOrganized": "will be organized",
+    "filesWillBeOrganized": "files will be organized"
+  },
+  "quickFixes": {
+    "title": "Quick Clarifications",
+    "subtitle": "We'll ask up to 5 questions to avoid guessing.",
+    "questionProgress": "Question {current} of {total}",
+    "thisAffects": "This affects {count} files",
+    "moreFiles": "more files",
+    "candidateDestinations": "Possible destinations",
+    "recommended": "Recommended",
+    "chooseUpTo": "Choose up to {count}",
+    "useSuggestion": "Use suggestion",
+    "skipQuestion": "Skip this question",
+    "skipAll": "Skip all remaining questions",
+    "reviewBeforeChanges": "You can review everything before changes are applied.",
+    "noQuestionsNeeded": "No clarifications needed!",
+    "allClear": "We're confident about where your files should go.",
+    "analyzing": "Analyzing your files...",
+    "generatingQuestions": "Using AI to identify any ambiguities that need your input.",
+    "errorTitle": "Couldn't generate questions"
+  },
+  "applyingChanges": {
+    "title": "Organizing your files",
+    "subtitle": "This usually takes a moment. Your files stay safe.",
+    "safetyNote": "All changes can be undone. Your original files are preserved.",
+    "testModeActive": "Test mode active - no files will actually be moved",
+    "noFilesDeleted": "No files deleted",
+    "undoAvailable": "Undo available",
+    "filesStayLocal": "Files stay local"
+  },
+  "success": {
+    "title": "Your files are organized",
+    "subtitle": "Everything is in place. You can review, undo, or keep going.",
+    "filesOrganized": "files organized",
+    "foldersCreated": "folders created",
+    "inReview": "in Review",
+    "duplicates": "duplicates",
+    "reassurance": "No files were deleted. Undo is available.",
+    "whereFilesWent": "Where your files went",
+    "noFilesMoved": "No files were moved",
+    "filesInFolder": "{count} files in this folder",
+    "viewFolder": "View folder",
+    "reviewNeeded": "A few files need your input",
+    "reviewExplanation": "{count} files weren't moved because we weren't fully confident.",
+    "reviewNow": "Review now",
+    "doLater": "Do this later",
+    "skippedFiles": "{count} files couldn't be moved and were left in place.",
+    "nothingToReview": "Nothing needs review right now",
+    "goToDashboard": "Go to dashboard",
+    "reviewOrganization": "Review organization",
+    "restoreExplanation": "Restore files to their original locations.",
+    "undoOrganization": "Undo organization",
+    "confirmUndo": "Are you sure?",
+    "yesUndo": "Yes, undo",
+    "openFolder": "Open Organized Folder",
+    "undo": "Undo",
+    "search": "Search",
+    "dashboard": "Dashboard"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "statusOrganized": "Your files are organized",
+    "statusNeedsReview": "Some files need review",
+    "lastOrganizedAt": "Last organized:",
+    "neverOrganized": "Your files haven't been organized yet",
+    "automationNote": "New files will be organized automatically.",
+    "organizeAgain": "Organize Again",
+    "organizeNow": "Organize now",
+    "reviewNow": "Review Now",
+    "reviewDuplicates": "Review duplicates",
+    "newFilesSubtext": "We'll use your existing rules.",
+    "automationPaused": "Automatic organization is off",
+    "turnOnAutomation": "Turn back on",
+    "yourFolders": "Your Folders",
+    "automationTitle": "Automation",
+    "autoOrganize": "Automatically organize new files",
+    "autoOrganizeDesc": "New files in monitored folders are organized automatically.",
+    "reviewFirst": "Send new files to Review first",
+    "reviewFirstDesc": "Safe mode: all new files go to Review for your approval.",
+    "autoArchive": "Archive older files automatically",
+    "autoArchiveDesc": "Files older than 3 years are moved to Archive.",
+    "activityTitle": "What changed recently",
+    "noRecentActivity": "No recent activity to show.",
+    "undoLastOrganization": "Undo last organization",
+    "folderInfo": {
+      "review": {
+        "purpose": "Files that need your input before being organized.",
+        "signals": "Low confidence matches or ambiguous filenames."
+      },
+      "work": {
+        "purpose": "Employment and job-related documents.",
+        "signals": "Resumes, contracts, performance reviews, company docs."
+      },
+      "money": {
+        "purpose": "Financial documents and records.",
+        "signals": "Bank statements, invoices, receipts, tax forms."
+      },
+      "home": {
+        "purpose": "Home and property-related documents.",
+        "signals": "Leases, mortgages, utilities, insurance, appliance manuals."
+      },
+      "health": {
+        "purpose": "Medical and health-related records.",
+        "signals": "Medical records, prescriptions, insurance claims, lab results."
+      },
+      "legal": {
+        "purpose": "Legal documents and official records.",
+        "signals": "Contracts, agreements, court documents, IDs, certificates."
+      },
+      "school": {
+        "purpose": "Education and academic documents.",
+        "signals": "Transcripts, assignments, course materials, diplomas."
+      },
+      "family": {
+        "purpose": "Personal and family documents.",
+        "signals": "Photos, personal letters, family records, memories."
+      },
+      "clients": {
+        "purpose": "Client and customer-related documents.",
+        "signals": "Client contracts, invoices, project files, communications."
+      },
+      "projects": {
+        "purpose": "Project-specific documents and files.",
+        "signals": "Project plans, deliverables, meeting notes, resources."
+      },
+      "archive": {
+        "purpose": "Older files organized by year.",
+        "signals": "Documents older than 3 years, historical records."
+      },
+      "default": {
+        "purpose": "Documents organized by category."
+      }
+    }
+  },
+  "crashRecovery": {
+    "title": "Previous Session Interrupted",
+    "description": "FileSense found an incomplete organization session from a previous run.",
+    "sessionInfo": "Session started {date}",
+    "operationsCompleted": "{completed} of {total} operations completed",
+    "whatToDo": "What would you like to do?",
+    "resume": "Resume",
+    "resumeDescription": "Continue where you left off",
+    "rollback": "Undo Changes",
+    "rollbackDescription": "Restore files to their original locations",
+    "discard": "Discard Session",
+    "discardDescription": "Leave files where they are and start fresh",
+    "processing": "Processing...",
+    "rollbackSuccess": "Successfully restored {count} files",
+    "rollbackFailed": "Some files could not be restored",
+    "discardSuccess": "Session discarded"
+  },
+  "categories": {
+    "Work": "Work",
+    "Money": "Money",
+    "Home": "Home",
+    "Health": "Health",
+    "Legal": "Legal",
+    "School": "School",
+    "Family": "Family & Friends",
+    "Clients": "Clients",
+    "Projects": "Projects",
+    "Archive": "Archive",
+    "Review": "Review"
+  }
+}

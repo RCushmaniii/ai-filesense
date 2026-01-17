@@ -1,0 +1,387 @@
+/**
+ * Folder & File Type Selection Screen (Step 1 of 8)
+ *
+ * Combined setup screen:
+ * - Select which folders to scan
+ * - Select which file types to organize
+ *
+ * This is the first "step" in the workflow (after the landing page).
+ */
+
+import { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n';
+import { useAppState, SelectedFolder } from '@/store/appState';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Stepper, ORGANIZATION_STEPS } from '@/components/Stepper';
+import { open } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import {
+  Monitor,
+  FileText,
+  Download,
+  FolderPlus,
+  Shield,
+  File,
+  FileSpreadsheet,
+} from 'lucide-react';
+
+// Known folder IDs
+const KNOWN_FOLDERS = {
+  desktop: 'desktop',
+  documents: 'documents',
+  downloads: 'downloads',
+};
+
+// File types we support
+const FILE_TYPES = [
+  {
+    id: 'pdf',
+    extensions: ['pdf'],
+    icon: FileText,
+    labelKey: 'folderSelection.fileTypes.pdf',
+    description: '.pdf',
+  },
+  {
+    id: 'word',
+    extensions: ['doc', 'docx'],
+    icon: FileSpreadsheet,
+    labelKey: 'folderSelection.fileTypes.word',
+    description: '.doc, .docx',
+  },
+  {
+    id: 'txt',
+    extensions: ['txt'],
+    icon: File,
+    labelKey: 'folderSelection.fileTypes.txt',
+    description: '.txt',
+  },
+] as const;
+
+type FileTypeId = typeof FILE_TYPES[number]['id'];
+
+// Type for known folder from backend
+interface KnownFolderInfo {
+  id: string;
+  name: string;
+  path: string;
+}
+
+interface FolderItemProps {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  isSelected: boolean;
+  onToggle: () => void;
+}
+
+function FolderItem({ id, name, icon, isSelected, onToggle }: FolderItemProps) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex items-center gap-4 p-4 rounded-lg border bg-card cursor-pointer hover:bg-accent/50 transition-colors"
+    >
+      <Checkbox
+        id={id}
+        checked={isSelected}
+        onCheckedChange={onToggle}
+      />
+      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+        {icon}
+      </div>
+      <span className="font-medium">{name}</span>
+    </label>
+  );
+}
+
+
+export function FolderSelectionScreen() {
+  const { t, language } = useTranslation();
+  const { state, selectFolder, deselectFolder, startScan, dispatch } = useAppState();
+  const [knownFolders, setKnownFolders] = useState<KnownFolderInfo[]>([]);
+
+  const isSpanish = language === 'es-MX';
+
+  // Initialize file type selection state
+  const [selectedTypes, setSelectedTypes] = useState<Set<FileTypeId>>(() => {
+    if (state.selectedExtensions.length > 0) {
+      const types = new Set<FileTypeId>();
+      for (const ft of FILE_TYPES) {
+        if (ft.extensions.some(ext => state.selectedExtensions.includes(ext))) {
+          types.add(ft.id);
+        }
+      }
+      return types;
+    }
+    return new Set(['pdf', 'word', 'txt']); // Default all selected
+  });
+
+  // Load known folder paths from Tauri backend
+  useEffect(() => {
+    const loadKnownFolders = async () => {
+      try {
+        const folders = await invoke<KnownFolderInfo[]>('get_known_folders');
+        setKnownFolders(folders);
+
+        // Initialize with known folders selected by default (only if not already selected)
+        if (state.selectedFolders.length === 0) {
+          folders.forEach(folder => {
+            const selectedFolder: SelectedFolder = {
+              id: folder.id,
+              path: folder.path,
+              name: t(`folderSelection.${folder.id}`),
+              isKnownFolder: true,
+            };
+            selectFolder(selectedFolder);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading known folders:', error);
+      }
+    };
+
+    loadKnownFolders();
+  }, []); // Only run once on mount
+
+  // Helper to get path for a known folder
+  const getKnownFolderPath = (folderId: string): string => {
+    const folder = knownFolders.find(f => f.id === folderId);
+    return folder?.path || '';
+  };
+
+  const handleToggleFileType = (typeId: FileTypeId) => {
+    setSelectedTypes(prev => {
+      const next = new Set(prev);
+      if (next.has(typeId)) {
+        next.delete(typeId);
+      } else {
+        next.add(typeId);
+      }
+      return next;
+    });
+  };
+
+  const handleAddFolder = async () => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: t('folderSelection.addFolder'),
+      });
+
+      if (selected && typeof selected === 'string') {
+        const folderName = selected.split(/[\\/]/).pop() || selected;
+        const newFolder: SelectedFolder = {
+          id: `custom-${Date.now()}`,
+          path: selected,
+          name: folderName,
+          isKnownFolder: false,
+        };
+        selectFolder(newFolder);
+      }
+    } catch (error) {
+      console.error('Error opening folder picker:', error);
+    }
+  };
+
+  const handleToggleFolder = (folderId: string) => {
+    const isCurrentlySelected = state.selectedFolders.some(f => f.id === folderId);
+
+    if (isCurrentlySelected) {
+      deselectFolder(folderId);
+    } else {
+      // Re-add the known folder
+      let name = '';
+      switch (folderId) {
+        case KNOWN_FOLDERS.desktop:
+          name = t('folderSelection.desktop');
+          break;
+        case KNOWN_FOLDERS.documents:
+          name = t('folderSelection.documents');
+          break;
+        case KNOWN_FOLDERS.downloads:
+          name = t('folderSelection.downloads');
+          break;
+      }
+
+      const folder: SelectedFolder = {
+        id: folderId,
+        path: getKnownFolderPath(folderId),
+        name,
+        isKnownFolder: true,
+      };
+      selectFolder(folder);
+    }
+  };
+
+  const isFolderSelected = (folderId: string) => {
+    return state.selectedFolders.some(f => f.id === folderId);
+  };
+
+  const handleStartScan = () => {
+    // Convert selected types to extensions
+    const extensions: string[] = [];
+    for (const ft of FILE_TYPES) {
+      if (selectedTypes.has(ft.id)) {
+        extensions.push(...ft.extensions);
+      }
+    }
+
+    // Save extensions to state
+    dispatch({ type: 'SET_SELECTED_EXTENSIONS', extensions });
+
+    if (state.selectedFolders.length > 0 && extensions.length > 0) {
+      console.log('[FolderSelection] Starting scan with:');
+      console.log('  Folders:', state.selectedFolders.map(f => f.path));
+      console.log('  Extensions:', extensions);
+      startScan();
+    }
+  };
+
+  // Get custom (non-known) folders
+  const customFolders = state.selectedFolders.filter(f => !f.isKnownFolder);
+
+  const canStartScan = state.selectedFolders.length > 0 && selectedTypes.size > 0;
+
+  return (
+    <div className="flex-1 flex flex-col p-8 overflow-y-auto">
+      <div className="max-w-2xl mx-auto w-full space-y-8">
+        {/* Stepper - Step 1 of 8: Choose Folders & File Types */}
+        <Stepper steps={ORGANIZATION_STEPS} currentStep={0} />
+
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold">
+            {t('folderSelection.title')}
+          </h1>
+          <p className="text-muted-foreground">
+            {t('folderSelection.explanation')}
+          </p>
+        </div>
+
+        {/* Safety note */}
+        <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
+          <CardContent className="p-4 flex gap-3">
+            <Shield className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-green-800 dark:text-green-200">
+              {t('folderSelection.safetyNote')}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Folders Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium">
+            {isSpanish ? '¿Dónde están tus archivos?' : 'Where are your files?'}
+          </h2>
+
+          <div className="space-y-3">
+            <FolderItem
+              id={KNOWN_FOLDERS.desktop}
+              name={t('folderSelection.desktop')}
+              icon={<Monitor className="h-5 w-5 text-muted-foreground" />}
+              isSelected={isFolderSelected(KNOWN_FOLDERS.desktop)}
+              onToggle={() => handleToggleFolder(KNOWN_FOLDERS.desktop)}
+            />
+            <FolderItem
+              id={KNOWN_FOLDERS.documents}
+              name={t('folderSelection.documents')}
+              icon={<FileText className="h-5 w-5 text-muted-foreground" />}
+              isSelected={isFolderSelected(KNOWN_FOLDERS.documents)}
+              onToggle={() => handleToggleFolder(KNOWN_FOLDERS.documents)}
+            />
+            <FolderItem
+              id={KNOWN_FOLDERS.downloads}
+              name={t('folderSelection.downloads')}
+              icon={<Download className="h-5 w-5 text-muted-foreground" />}
+              isSelected={isFolderSelected(KNOWN_FOLDERS.downloads)}
+              onToggle={() => handleToggleFolder(KNOWN_FOLDERS.downloads)}
+            />
+
+            {/* Custom folders */}
+            {customFolders.map(folder => (
+              <FolderItem
+                key={folder.id}
+                id={folder.id}
+                name={folder.name}
+                icon={<FolderPlus className="h-5 w-5 text-muted-foreground" />}
+                isSelected={true}
+                onToggle={() => deselectFolder(folder.id)}
+              />
+            ))}
+
+            {/* Add folder button */}
+            <Button
+              variant="outline"
+              className="w-full gap-2 h-12"
+              onClick={handleAddFolder}
+            >
+              <FolderPlus className="h-5 w-5" />
+              {t('folderSelection.addFolder')}
+            </Button>
+          </div>
+        </div>
+
+        {/* File Types Section */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium">
+            {t('folderSelection.fileTypesTitle')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('folderSelection.fileTypesSubtitle')}
+          </p>
+
+          <div className="grid grid-cols-3 gap-3">
+            {FILE_TYPES.map(ft => {
+              const Icon = ft.icon;
+              const isSelected = selectedTypes.has(ft.id);
+
+              return (
+                <Card
+                  key={ft.id}
+                  className={`cursor-pointer transition-all hover:border-primary ${
+                    isSelected ? 'border-primary bg-primary/5' : ''
+                  }`}
+                  onClick={() => handleToggleFileType(ft.id)}
+                >
+                  <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
+                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                      isSelected ? 'bg-primary/10' : 'bg-muted'
+                    }`}>
+                      <Icon className={`h-5 w-5 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{t(ft.labelKey)}</p>
+                      <p className="text-xs text-muted-foreground">{ft.description}</p>
+                    </div>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => handleToggleFileType(ft.id)}
+                      className="mt-1"
+                    />
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Coming soon note for other file types */}
+          <p className="text-xs text-muted-foreground text-center">
+            {t('folderSelection.comingSoon')}: .xlsx, .csv, .pptx
+          </p>
+        </div>
+
+        {/* Start scan button */}
+        <Button
+          size="lg"
+          className="w-full h-14 text-lg"
+          onClick={handleStartScan}
+          disabled={!canStartScan}
+        >
+          {t('folderSelection.startScan')}
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,527 @@
+{
+  "app": {
+    "name": "AI FileSense",
+    "tagline": "Organización de archivos con IA",
+    "footerPrivacy": "Tus archivos permanecen locales — solo se procesan metadatos"
+  },
+  "home": {
+    "welcome": "¿Qué te gustaría hacer?",
+    "findFile": "Buscar un archivo",
+    "findFileDesc": "Busca describiendo lo que recuerdas",
+    "cleanUp": "Limpiar mi Escritorio",
+    "cleanUpDesc": "Organiza archivos con ayuda de IA",
+    "recentActivity": "Actividad Reciente",
+    "noRecentActivity": "Sin actividad reciente"
+  },
+  "welcome": {
+    "title": "Organiza tus archivos con IA",
+    "subtitle": "Deja de buscar. Empieza a encontrar.",
+    "getStarted": "Comenzar",
+    "selectLanguage": "Seleccionar idioma",
+    "trustFilesLocal": "Tus archivos permanecen locales",
+    "trustFilesLocalDesc": "Solo los nombres de archivo se analizan. El contenido no sale de tu dispositivo.",
+    "trustApproval": "Tú apruebas cada cambio",
+    "trustApprovalDesc": "Nada se mueve sin tu permiso. Revisarás todo antes de que pase.",
+    "trustUndo": "Deshacer siempre disponible",
+    "trustUndoDesc": "Si cambias de opinión, un clic restaura todo."
+  },
+  "fileTypes": {
+    "title": "¿Qué tipos de archivos quieres organizar?",
+    "subtitle": "Selecciona los tipos de documento que te gustaría que FileSense organice.",
+    "safetyNote": "Solo veremos archivos de estos tipos. Tus otros archivos no serán tocados."
+  },
+  "folderSelection": {
+    "title": "Elige carpetas para escanear",
+    "fileTypesSelected": "Tipos de archivo a escanear",
+    "subtitle": "Selecciona qué carpetas te gustaría organizar",
+    "explanation": "Para ayudarte a encontrar y organizar archivos, FileSense necesita ver dónde están tus documentos.",
+    "safetyNote": "Solo escaneamos las carpetas que elijas. Nada se mueve sin tu aprobación.",
+    "desktop": "Escritorio",
+    "documents": "Documentos",
+    "downloads": "Descargas",
+    "addFolder": "Agregar otra carpeta",
+    "fileTypesTitle": "¿Qué tipos de archivos?",
+    "fileTypesSubtitle": "Selecciona los tipos de archivo que quieres organizar",
+    "fileTypes": {
+      "pdf": "Archivos PDF",
+      "txt": "Archivos de texto",
+      "word": "Documentos de Word"
+    },
+    "comingSoon": "Próximamente",
+    "startScan": "Escanear mis documentos",
+    "counting": "Contando archivos...",
+    "filesFound": "Aproximadamente {count} documentos para organizar",
+    "selectFoldersPrompt": "Selecciona carpetas para ver estimación",
+    "scansRemaining": "{count} escaneos gratuitos restantes",
+    "overFileLimit": "El plan gratuito permite {limit} archivos por escaneo. Selecciona menos carpetas o actualiza.",
+    "outOfScans": "Has usado todos tus escaneos gratuitos",
+    "upgradeToScan": "Actualiza para continuar organizando tus archivos"
+  },
+  "scanning": {
+    "title": "Escaneando tus archivos",
+    "finding": "Buscando archivos...",
+    "filesFound": "{count} archivos encontrados",
+    "analyzing": "Analizando {current} de {total} archivos",
+    "understanding": "Entendiendo tus documentos...",
+    "pause": "Pausar",
+    "resume": "Continuar",
+    "cancel": "Cancelar",
+    "paused": "Escaneo pausado. Haz clic en continuar para proseguir.",
+    "status": {
+      "analyzing_names": "Analizando nombres de archivo y estructura de carpetas para entender cómo trabajas.",
+      "identifying_types": "Identificando tipos de documento para agrupar archivos similares.",
+      "learning_relationships": "Aprendiendo relaciones entre archivos para mejorar la precisión.",
+      "mapping_patterns": "Mapeando patrones comunes en tus carpetas.",
+      "reviewing_metadata": "Revisando metadatos de archivos para entender antigüedad y relevancia.",
+      "building_model": "Construyendo un modelo mental de cómo se conectan tus documentos.",
+      "preparing_suggestions": "Preparando sugerencias más inteligentes conforme se analizan más archivos.",
+      "improving_accuracy": "Mejorando la precisión con cada lote de archivos procesados.",
+      "extracting_metadata": "Extrayendo metadatos y señales semánticas de documentos.",
+      "classifying_files": "Clasificando archivos usando múltiples heurísticas.",
+      "detecting_topics": "Ejecutando análisis de contenido ligero para detectar temas.",
+      "scoring_similarity": "Puntuando similitud entre documentos relacionados.",
+      "detecting_duplicates": "Detectando duplicados y casi-duplicados.",
+      "inferring_projects": "Infiriendo agrupaciones de proyectos basadas en proximidad de archivos.",
+      "no_changes_yet": "No se han hecho cambios todavía — esto es solo análisis.",
+      "files_remain": "Todos los archivos permanecen exactamente donde están.",
+      "processing_batches": "Procesando documentos en pequeños lotes para mayor precisión.",
+      "local_only": "Tus archivos se analizan localmente y nunca se suben.",
+      "nothing_moved": "Nada se moverá sin tu aprobación.",
+      "read_only": "Este paso es solo de lectura — sin cambios todavía.",
+      "you_control": "Siempre tienes el control de lo que pasa después.",
+      "stop_anytime": "Puedes detener este proceso en cualquier momento.",
+      "cleaner_folders": "Esto nos ayuda a sugerir carpetas más limpias y simples.",
+      "better_analysis": "Un mejor análisis significa menos clics después.",
+      "fits_how_you_work": "Estamos preparando una estructura que se adapta a cómo trabajas.",
+      "faster_searches": "El objetivo: búsquedas más rápidas y menos desorden.",
+      "smarter_grouping": "La agrupación inteligente comienza aquí.",
+      "recurring_patterns": "Estamos notando patrones recurrentes en documentos.",
+      "belong_together": "Algunos archivos claramente pertenecen juntos.",
+      "active_folders": "Ciertas carpetas son más activas que otras.",
+      "naming_conventions": "Las convenciones de nombres varían más de lo esperado.",
+      "opportunities_clear": "Las oportunidades de organización se están volviendo claras."
+    }
+  },
+  "personalization": {
+    "questionOf": "Pregunta {current} de {total}",
+    "finish": "Terminar",
+    "q1": {
+      "title": "¿Cuál te describe mejor al usar esta computadora?",
+      "hint": "Selecciona todas las que apliquen",
+      "options": {
+        "parent": "Padre / Administrador familiar",
+        "student": "Estudiante",
+        "teacher": "Maestro / Profesor",
+        "office": "Empleado de oficina",
+        "freelancer": "Freelancer / Consultor",
+        "business": "Dueño de pequeño negocio",
+        "retired": "Jubilado",
+        "creative": "Creador de contenido"
+      }
+    },
+    "q2": {
+      "title": "Cuando necesitas encontrar un archivo, ¿cómo lo piensas normalmente?",
+      "options": {
+        "topic": {
+          "label": "Por carpeta o tema",
+          "desc": "\"¿En qué carpeta está mi archivo?\""
+        },
+        "time": {
+          "label": "Por fecha",
+          "desc": "\"¿Cuándo creé ese archivo?\""
+        },
+        "project": {
+          "label": "Por proyecto o persona",
+          "desc": "\"¿A qué proyecto pertenecía ese archivo?\""
+        }
+      }
+    },
+    "q3": {
+      "title": "¿Qué tan detallada debe ser tu estructura de carpetas?",
+      "options": {
+        "flat": {
+          "label": "Mantenerlo simple",
+          "desc": "Mostrar solo las carpetas principales (11 categorías)"
+        },
+        "moderate": {
+          "label": "Algunas subcarpetas",
+          "desc": "Organizar temas principales (Dinero/Impuestos, Salud/Seguros, etc.)"
+        },
+        "detailed": {
+          "label": "Completamente organizado",
+          "desc": "Crear subcarpetas para proyectos, clientes y temas detectados"
+        }
+      }
+    },
+    "q4": {
+      "title": "¿Qué debe pasar con documentos antiguos (3+ años)?",
+      "options": {
+        "keep": {
+          "label": "Mantenerlos con archivos actuales",
+          "desc": "Los archivos antiguos permanecen en sus carpetas de categoría"
+        },
+        "archive": {
+          "label": "Mover a Archivo por año",
+          "desc": "Organizar archivos antiguos en Archivo/2023, Archivo/2022, etc."
+        }
+      }
+    }
+  },
+  "location": {
+    "title": "¿Dónde están tus documentos?",
+    "files": "archivos",
+    "addFolder": "Agregar carpeta...",
+    "addFolderTitle": "Selecciona una carpeta para escanear",
+    "includeSubfolders": "Incluir subcarpetas",
+    "estimated": "Estimado",
+    "documentsToOrganize": "documentos para organizar",
+    "scanNow": "Escanear Ahora"
+  },
+  "results": {
+    "title": "Esto es lo que encontramos",
+    "ready": "Listo para organizar",
+    "documentsFound": "Encontramos {count} documentos listos para organizar",
+    "documentsInto": "documentos en",
+    "documents": "documentos",
+    "folders": "carpetas",
+    "duplicates": "duplicados",
+    "howToOrganize": "¿Cómo te gustaría organizarlos?",
+    "createPlan": "Crear plan de organización",
+    "generatingPlan": "Creando tu plan...",
+    "testMode": "Modo de Prueba (Solo Vista Previa)",
+    "testModeDescription": "Ve lo que pasaría sin mover ningún archivo. Perfecto para probarlo primero.",
+    "modeLabel": "Modo de Organización:",
+    "modes": {
+      "simple": "Simple",
+      "timeline": "Cronológico",
+      "smart_groups": "Grupos Inteligentes"
+    },
+    "needsReview": "documentos necesitan revisión (baja confianza)",
+    "reviewChanges": "Revisar Cambios"
+  },
+  "organizationStyles": {
+    "title": "¿Cómo te gustaría organizar?",
+    "subtitle": "Cada estilo crea una estructura de carpetas diferente. Todos usan carpetas numeradas (01-11) para ordenación consistente.",
+    "simple": {
+      "name": "Áreas de Vida",
+      "description": "Agrupa archivos en 11 carpetas inteligentes: Trabajo, Dinero, Casa, Salud, Legal, Escuela, Familia y Amigos, Clientes, Proyectos, Archivo y Revisar.",
+      "bestFor": "Archivos personales y familiares"
+    },
+    "timeline": {
+      "name": "Cronológico",
+      "description": "Agrupa archivos por año con subcarpetas trimestrales. Perfecto para encontrar documentos por fecha de creación.",
+      "bestFor": "Archivos cronológicos"
+    },
+    "smartGroups": {
+      "name": "Grupos Inteligentes",
+      "description": "Agrupa archivos por clientes, proyectos y entidades detectadas. La IA encuentra nombres de empresas y proyectos en tus documentos.",
+      "bestFor": "Freelancers y negocios"
+    },
+    "continueToPreview": "Continuar a vista previa",
+    "generatingPlan": "Generando plan..."
+  },
+  "planPreview": {
+    "title": "Revisa tu plan de organización",
+    "filesWillMove": "{count} archivos se moverán",
+    "lowConfidence": "{count} elementos necesitan tu revisión",
+    "duplicates": "{count} duplicados encontrados",
+    "stageFirst": "Organizar primero en carpeta temporal (recomendado)",
+    "stageDescription": "Los archivos se mueven a una carpeta temporal antes de su ubicación final",
+    "showAll": "Mostrar todos los archivos",
+    "showLowConfidence": "Mostrar elementos que necesitan revisión",
+    "currentLocation": "Ubicación actual",
+    "newLocation": "Nueva ubicación",
+    "confidence": "Confianza",
+    "confidenceHigh": "Alta",
+    "confidenceMedium": "Media",
+    "confidenceLow": "Baja",
+    "approve": "Aprobar",
+    "reject": "Mantener en su lugar",
+    "execute": "Organizar mis archivos",
+    "cancel": "Cancelar"
+  },
+  "executing": {
+    "title": "Organizando tus archivos",
+    "moving": "Moviendo {current} de {total}",
+    "complete": "¡Organización completa!",
+    "filesMoved": "{count} archivos organizados",
+    "desktopCleaned": "Escritorio limpio",
+    "viewResults": "Ver resultados",
+    "undo": "Deshacer cambios",
+    "undoLastRun": "Deshacer última ejecución",
+    "searchFiles": "Buscar tus archivos"
+  },
+  "search": {
+    "placeholder": "Describe lo que estás buscando...",
+    "examples": "Prueba: \"ese pdf del seguro del año pasado\" o \"fotos de vacaciones\"",
+    "filters": "Filtros",
+    "wasOnDesktop": "Estaba en el Escritorio",
+    "fileType": "Tipo de archivo",
+    "dateRange": "Rango de fechas",
+    "results": "{count} archivos encontrados",
+    "noResults": "Ningún archivo coincide con tu búsqueda",
+    "currentLocation": "Ubicación actual",
+    "previousLocation": "Anteriormente en",
+    "open": "Abrir",
+    "showInFolder": "Mostrar en carpeta"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "apiKey": "Clave API",
+    "apiKeyPlaceholder": "Ingresa tu clave API de Anthropic",
+    "apiKeyHelp": "Obtén tu clave en console.anthropic.com",
+    "save": "Guardar",
+    "saved": "Configuración guardada",
+    "testConnection": "Probar conexión",
+    "connectionSuccess": "Conexión exitosa",
+    "connectionFailed": "Conexión fallida"
+  },
+  "aiCredits": {
+    "title": "Créditos de IA",
+    "remaining": "Créditos restantes",
+    "usedThisWeek": "Usados esta semana",
+    "whatAreCredits": "¿Qué son los créditos de IA?",
+    "explanation": "FileSense usa IA avanzada para leer y entender tus documentos. El procesamiento de IA tiene un costo real, por eso FileSense usa créditos prepagados.",
+    "control": "Siempre tienes el control:",
+    "controlPoints": [
+      "Puedes ver cuántos créditos has usado",
+      "Nada se procesa sin tu aprobación",
+      "Puedes agregar créditos en cualquier momento"
+    ],
+    "addCredits": "Agregar créditos",
+    "lowWarning": "Te quedan {count} créditos de IA. FileSense seguirá funcionando, pero el nuevo análisis de IA se pausará.",
+    "estimatedCost": "Esta acción usará aproximadamente {count} créditos de IA"
+  },
+  "stepper": {
+    "stepOf": "Paso {current} de {total}",
+    "steps": {
+      "folders": "Elegir Carpetas",
+      "scan": "Escaneando",
+      "personalize": "Personalizar",
+      "results": "Resultados",
+      "review": "Revisar",
+      "clarify": "Aclarar",
+      "apply": "Aplicar",
+      "success": "Listo"
+    }
+  },
+  "common": {
+    "back": "Atrás",
+    "next": "Siguiente",
+    "continue": "Continuar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "retry": "Intentar de nuevo",
+    "files": "archivos",
+    "folders": "carpetas"
+  },
+  "errors": {
+    "scanFailed": "Error al escanear archivos",
+    "classificationFailed": "Error al clasificar archivos",
+    "moveFailed": "Error al mover archivos",
+    "apiKeyRequired": "Por favor agrega tu clave API en configuración",
+    "apiKeyInvalid": "Clave API inválida",
+    "networkError": "Error de red. Por favor verifica tu conexión.",
+    "networkUnavailable": "Red no disponible",
+    "aiTimeout": "El proveedor de IA no respondió. Intenta de nuevo.",
+    "partialSuccess": "Algunos archivos no pudieron ser procesados"
+  },
+  "footer": {
+    "allRightsReserved": "Todos los derechos reservados.",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Servicio",
+    "website": "Sitio Web"
+  },
+  "activityLog": {
+    "title": "Registro de Actividad",
+    "session": "Sesión de Organización",
+    "noSessions": "Aún no hay sesiones de organización. Tu actividad aparecerá aquí después de organizar archivos.",
+    "noDetails": "No se pudieron cargar los detalles de la sesión",
+    "filesOrganized": "archivos organizados",
+    "successful": "Exitosos",
+    "failed": "Fallidos",
+    "undone": "Deshechos",
+    "errors": "Errores",
+    "undoAll": "Deshacer Todo",
+    "export": "Exportar Registro"
+  },
+  "detailedReview": {
+    "title": "Revisar y Excluir",
+    "lastChance": "Esta es tu última oportunidad para excluir archivos antes de que comience la organización.",
+    "excludedRemainUntouched": "Los archivos excluidos permanecerán exactamente donde están — no los tocaremos.",
+    "folders": "Carpetas",
+    "selectFolder": "Selecciona una carpeta para ver archivos",
+    "excluded": "Excluido",
+    "folderExcluded": "Carpeta completa excluida",
+    "filesExcluded": "archivos excluidos",
+    "willBeOrganized": "serán organizados",
+    "filesWillBeOrganized": "archivos serán organizados"
+  },
+  "quickFixes": {
+    "title": "Aclaraciones Rápidas",
+    "subtitle": "Haremos hasta 5 preguntas para evitar adivinar.",
+    "questionProgress": "Pregunta {current} de {total}",
+    "thisAffects": "Esto afecta {count} archivos",
+    "moreFiles": "archivos más",
+    "candidateDestinations": "Destinos posibles",
+    "recommended": "Recomendado",
+    "chooseUpTo": "Elige hasta {count}",
+    "useSuggestion": "Usar sugerencia",
+    "skipQuestion": "Omitir esta pregunta",
+    "skipAll": "Omitir todas las preguntas restantes",
+    "reviewBeforeChanges": "Puedes revisar todo antes de aplicar cambios.",
+    "noQuestionsNeeded": "¡No se necesitan aclaraciones!",
+    "allClear": "Estamos seguros de dónde deben ir tus archivos.",
+    "analyzing": "Analizando tus archivos...",
+    "generatingQuestions": "Usando IA para identificar ambigüedades que necesitan tu opinión.",
+    "errorTitle": "No se pudieron generar preguntas"
+  },
+  "applyingChanges": {
+    "title": "Organizando tus archivos",
+    "subtitle": "Esto suele tomar un momento. Tus archivos están seguros.",
+    "safetyNote": "Todos los cambios se pueden deshacer. Tus archivos originales están preservados.",
+    "testModeActive": "Modo de prueba activo - ningún archivo será movido realmente",
+    "noFilesDeleted": "Sin eliminaciones",
+    "undoAvailable": "Deshacer disponible",
+    "filesStayLocal": "Archivos locales"
+  },
+  "success": {
+    "title": "Tus archivos están organizados",
+    "subtitle": "Todo está en su lugar. Puedes revisar, deshacer o continuar.",
+    "filesOrganized": "archivos organizados",
+    "foldersCreated": "carpetas creadas",
+    "inReview": "para revisar",
+    "duplicates": "duplicados",
+    "reassurance": "No se eliminaron archivos. Deshacer disponible.",
+    "whereFilesWent": "Dónde fueron tus archivos",
+    "noFilesMoved": "No se movieron archivos",
+    "filesInFolder": "{count} archivos en esta carpeta",
+    "viewFolder": "Ver carpeta",
+    "reviewNeeded": "Algunos archivos necesitan tu revisión",
+    "reviewExplanation": "{count} archivos no se movieron porque no estábamos completamente seguros.",
+    "reviewNow": "Revisar ahora",
+    "doLater": "Hacer después",
+    "skippedFiles": "{count} archivos no pudieron moverse y se dejaron en su lugar.",
+    "nothingToReview": "No hay nada que revisar ahora",
+    "goToDashboard": "Ir al panel",
+    "reviewOrganization": "Revisar organización",
+    "restoreExplanation": "Restaurar archivos a sus ubicaciones originales.",
+    "undoOrganization": "Deshacer organización",
+    "confirmUndo": "¿Estás seguro?",
+    "yesUndo": "Sí, deshacer",
+    "openFolder": "Abrir Carpeta Organizada",
+    "undo": "Deshacer",
+    "search": "Buscar",
+    "dashboard": "Panel"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "statusOrganized": "Tus archivos están organizados",
+    "statusNeedsReview": "Algunos archivos necesitan revisión",
+    "lastOrganizedAt": "Última organización:",
+    "neverOrganized": "Tus archivos aún no han sido organizados",
+    "automationNote": "Los archivos nuevos se organizarán automáticamente.",
+    "organizeAgain": "Organizar de Nuevo",
+    "organizeNow": "Organizar ahora",
+    "reviewNow": "Revisar Ahora",
+    "reviewDuplicates": "Revisar duplicados",
+    "newFilesSubtext": "Usaremos tus reglas existentes.",
+    "automationPaused": "La organización automática está desactivada",
+    "turnOnAutomation": "Volver a activar",
+    "yourFolders": "Tus Carpetas",
+    "automationTitle": "Automatización",
+    "autoOrganize": "Organizar archivos nuevos automáticamente",
+    "autoOrganizeDesc": "Los archivos nuevos en carpetas monitoreadas se organizan automáticamente.",
+    "reviewFirst": "Enviar archivos nuevos a Revisar primero",
+    "reviewFirstDesc": "Modo seguro: todos los archivos nuevos van a Revisar para tu aprobación.",
+    "autoArchive": "Archivar archivos antiguos automáticamente",
+    "autoArchiveDesc": "Los archivos de más de 3 años se mueven a Archivo.",
+    "activityTitle": "Qué cambió recientemente",
+    "noRecentActivity": "No hay actividad reciente que mostrar.",
+    "undoLastOrganization": "Deshacer última organización",
+    "folderInfo": {
+      "review": {
+        "purpose": "Archivos que necesitan tu decisión antes de organizarse.",
+        "signals": "Coincidencias de baja confianza o nombres ambiguos."
+      },
+      "work": {
+        "purpose": "Documentos de empleo y relacionados con el trabajo.",
+        "signals": "Currículums, contratos, evaluaciones, documentos de empresa."
+      },
+      "money": {
+        "purpose": "Documentos y registros financieros.",
+        "signals": "Estados de cuenta, facturas, recibos, formularios de impuestos."
+      },
+      "home": {
+        "purpose": "Documentos relacionados con el hogar y propiedades.",
+        "signals": "Contratos de arrendamiento, hipotecas, servicios, seguros, manuales."
+      },
+      "health": {
+        "purpose": "Registros médicos y de salud.",
+        "signals": "Expedientes médicos, recetas, reclamos de seguro, resultados de laboratorio."
+      },
+      "legal": {
+        "purpose": "Documentos legales y registros oficiales.",
+        "signals": "Contratos, acuerdos, documentos judiciales, identificaciones, certificados."
+      },
+      "school": {
+        "purpose": "Documentos educativos y académicos.",
+        "signals": "Calificaciones, tareas, materiales de curso, diplomas."
+      },
+      "family": {
+        "purpose": "Documentos personales y familiares.",
+        "signals": "Fotos, cartas personales, registros familiares, recuerdos."
+      },
+      "clients": {
+        "purpose": "Documentos relacionados con clientes.",
+        "signals": "Contratos de clientes, facturas, archivos de proyectos, comunicaciones."
+      },
+      "projects": {
+        "purpose": "Documentos y archivos específicos de proyectos.",
+        "signals": "Planes de proyecto, entregables, notas de reuniones, recursos."
+      },
+      "archive": {
+        "purpose": "Archivos antiguos organizados por año.",
+        "signals": "Documentos de más de 3 años, registros históricos."
+      },
+      "default": {
+        "purpose": "Documentos organizados por categoría."
+      }
+    }
+  },
+  "crashRecovery": {
+    "title": "Sesión Anterior Interrumpida",
+    "description": "FileSense encontró una sesión de organización incompleta de una ejecución anterior.",
+    "sessionInfo": "Sesión iniciada {date}",
+    "operationsCompleted": "{completed} de {total} operaciones completadas",
+    "whatToDo": "¿Qué te gustaría hacer?",
+    "resume": "Continuar",
+    "resumeDescription": "Continuar donde lo dejaste",
+    "rollback": "Deshacer Cambios",
+    "rollbackDescription": "Restaurar archivos a sus ubicaciones originales",
+    "discard": "Descartar Sesión",
+    "discardDescription": "Dejar archivos donde están y comenzar de nuevo",
+    "processing": "Procesando...",
+    "rollbackSuccess": "{count} archivos restaurados exitosamente",
+    "rollbackFailed": "Algunos archivos no pudieron ser restaurados",
+    "discardSuccess": "Sesión descartada"
+  },
+  "categories": {
+    "Work": "Trabajo",
+    "Money": "Dinero",
+    "Home": "Casa",
+    "Health": "Salud",
+    "Legal": "Legal",
+    "School": "Escuela",
+    "Family": "Familia y Amigos",
+    "Clients": "Clientes",
+    "Projects": "Proyectos",
+    "Archive": "Archivo",
+    "Review": "Revisar"
+  }
+}

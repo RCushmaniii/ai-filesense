@@ -6,6 +6,7 @@ use std::sync::Mutex;
 pub struct DbPath(pub PathBuf);
 
 /// Thread-safe database connection
+#[allow(dead_code)]
 pub struct DbConnection(pub Mutex<Connection>);
 
 /// Initialize the SQLite database with required tables
@@ -120,7 +121,76 @@ pub fn init_database(path: &PathBuf) -> Result<()> {
         [],
     )?;
 
+    // ========================================
+    // Activity Log Tables (per doc 07)
+    // ========================================
+
+    // Sessions table - tracks organization sessions
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            completed_at TEXT,
+            status TEXT NOT NULL DEFAULT 'in_progress'
+                CHECK (status IN ('in_progress', 'completed', 'partial', 'rolled_back', 'failed')),
+            selected_mode TEXT,
+            user_type TEXT,
+            total_operations INTEGER DEFAULT 0,
+            successful_operations INTEGER DEFAULT 0,
+            failed_operations INTEGER DEFAULT 0,
+            notes TEXT
+        )",
+        [],
+    )?;
+
+    // Operations table - individual file operations within a session
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS operations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            op_id INTEGER NOT NULL,
+            op_type TEXT NOT NULL CHECK (op_type IN ('move', 'copy', 'create_folder', 'rename', 'delete')),
+            status TEXT NOT NULL DEFAULT 'pending'
+                CHECK (status IN ('pending', 'completed', 'failed', 'rolled_back', 'skipped')),
+            source_path TEXT,
+            destination_path TEXT,
+            filename TEXT,
+            extension TEXT,
+            size_bytes INTEGER,
+            confidence REAL,
+            suggested_folder TEXT,
+            document_type TEXT,
+            timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            rolled_back_at TEXT,
+            error_message TEXT,
+            UNIQUE(session_id, op_id),
+            FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+
+    // Errors table - detailed error tracking
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS activity_errors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            op_id INTEGER,
+            error_code TEXT NOT NULL,
+            error_message TEXT,
+            file_path TEXT,
+            severity TEXT CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+            timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            resolved INTEGER DEFAULT 0,
+            resolution TEXT,
+            FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+
+    // ========================================
     // Indexes for performance
+    // ========================================
+
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_files_path ON files(path)",
         [],
@@ -135,6 +205,28 @@ pub fn init_database(path: &PathBuf) -> Result<()> {
     )?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_move_history_plan_id ON move_history(plan_id)",
+        [],
+    )?;
+
+    // Activity log indexes
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_sessions_started_at ON sessions(started_at)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_operations_session_id ON operations(session_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_operations_status ON operations(status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_activity_errors_session_id ON activity_errors(session_id)",
         [],
     )?;
 

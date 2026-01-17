@@ -60,6 +60,12 @@ pub fn scan_directories(config: &ScanConfig) -> Vec<ScannedFile> {
                 continue;
             }
 
+            // Skip files in "Organized Files" folders - these are already organized
+            let path_str = path.to_string_lossy().to_lowercase();
+            if path_str.contains("organized files") {
+                continue;
+            }
+
             // Skip hidden files unless configured
             if !config.include_hidden {
                 if let Some(name) = path.file_name() {
@@ -142,6 +148,7 @@ fn compute_file_hash(path: &Path) -> Option<String> {
 }
 
 /// Extract text snippet from a file for AI classification
+#[allow(dead_code)]
 pub fn extract_snippet(path: &Path, max_chars: usize) -> Option<String> {
     let extension = path.extension()?.to_string_lossy().to_lowercase();
 
@@ -170,6 +177,7 @@ pub fn extract_snippet(path: &Path, max_chars: usize) -> Option<String> {
 }
 
 /// Extract text from plain text files
+#[allow(dead_code)]
 fn extract_text_snippet(path: &Path, max_chars: usize) -> Option<String> {
     let mut file = File::open(path).ok()?;
     let mut buffer = vec![0u8; max_chars];

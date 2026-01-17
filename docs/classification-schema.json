@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FileClassificationResponse",
+  "type": "object",
+  "required": ["classifications"],
+  "additionalProperties": false,
+  "properties": {
+    "classifications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["file_id", "category", "subcategory", "tags", "summary", "confidence", "suggested_folder"],
+        "additionalProperties": false,
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Preserved exactly from input"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Legal", "Financial", "Medical", "School", "Code",
+              "Media", "Archives", "Spreadsheets", "Images",
+              "Documents", "Work", "Personal", "Other"
+            ]
+          },
+          "subcategory": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "string",
+                "enum": [
+                  "Contracts", "Court-Documents", "Policies", "Licenses", "NDAs",
+                  "Invoices", "Tax-Returns", "Receipts", "Bank-Statements", "Budgets", "Payroll",
+                  "Lab-Results", "Prescriptions", "Insurance-Claims", "Medical-Records", "Imaging",
+                  "Assignments", "Lecture-Notes", "Syllabi", "Transcripts", "Research-Papers",
+                  "Source-Code", "Scripts", "Config-Files", "Documentation", "Notebooks",
+                  "Video", "Audio", "Podcasts", "Music",
+                  "Backups", "Compressed", "Exports",
+                  "Data-Exports", "Reports", "Trackers", "Logs",
+                  "Photos", "Screenshots", "Vector-Art", "Icons", "Scans",
+                  "Letters", "Manuals", "Presentations", "Notes", "Ebooks",
+                  "Meeting-Notes", "Project-Files", "Communications", "Proposals",
+                  "Journal", "Travel", "Recipes", "Hobbies"
+                ]
+              }
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 5,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$",
+              "minLength": 2,
+              "maxLength": 30
+            }
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 80
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0.50,
+            "maximum": 0.98
+          },
+          "suggested_folder": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]+(/[A-Za-z0-9-]+)*$",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      }
+    }
+  }
+}

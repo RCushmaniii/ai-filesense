@@ -284,7 +284,7 @@ export function QuickFixesScreen() {
         style = 'timeline';
       }
 
-      const plan = await invoke<{
+      const planResult = await invoke<{
         id: string;
         name: string;
         style: string;
@@ -309,7 +309,11 @@ export function QuickFixesScreen() {
         folderDepth: state.personalization.folderDepth, // Pass to backend
       });
 
-      // Store the plan in state
+      // Store the plan in state (cast style to OrganizationStyle)
+      const plan = {
+        ...planResult,
+        style: planResult.style as 'simple' | 'timeline' | 'smart_groups',
+      };
       dispatch({ type: 'SET_CURRENT_PLAN', plan });
 
       // Navigate to Applying Changes (Screen 8)

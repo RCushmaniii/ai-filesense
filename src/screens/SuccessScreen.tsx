@@ -377,7 +377,7 @@ export function SuccessScreen() {
             variant="outline"
             size="lg"
             className="w-full gap-2"
-            onClick={handleOpenFolder}
+            onClick={() => handleOpenFolder()}
           >
             <Eye className="h-5 w-5" />
             {isSpanish ? 'Revisar organización' : 'Review organization'}

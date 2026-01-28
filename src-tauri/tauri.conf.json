@@ -40,6 +40,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "licenseFile": "../LICENSE",
+    "shortDescription": "AI-powered local file organization for Windows",
+    "longDescription": "AI FileSense uses artificial intelligence to automatically organize your files into a clean, logical folder structure. Simply select folders to scan, and let AI analyze and categorize your documents, images, and media files.",
+    "category": "Utility",
+    "publisher": "AI FileSense",
+    "copyright": "Copyright © 2026 AI FileSense. All Rights Reserved.",
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",

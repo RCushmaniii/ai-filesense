@@ -21,15 +21,20 @@ struct SavedSettings {
 }
 
 impl AIConfig {
-    /// Create config from settings file or environment variables
+    /// Create config from settings file, environment variables, or compile-time embedded key
     pub fn from_env() -> Result<Self, String> {
-        // Try to read from settings file first
+        // Try to read from settings file first (user-configured)
         let settings_api_key = Self::read_from_settings();
 
-        // Try settings file, then env vars
+        // Try sources in order:
+        // 1. User settings (highest priority - allows override)
+        // 2. Runtime environment variables
+        // 3. Compile-time embedded key (freemium model - developer's key)
         let api_key = settings_api_key
             .or_else(|| env::var("ANTHROPIC_SECRET_KEY").ok())
             .or_else(|| env::var("ANTHROPIC_API_KEY").ok())
+            .or_else(|| option_env!("ANTHROPIC_SECRET_KEY").map(String::from))
+            .or_else(|| option_env!("ANTHROPIC_API_KEY").map(String::from))
             .ok_or("API key not configured. Please add your Anthropic API key in Settings.")?;
 
         // Trim any whitespace that might have been included

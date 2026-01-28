@@ -435,12 +435,41 @@ export function FolderSelectionScreen() {
           </Card>
         )}
 
+        {/* Free tier scans remaining warning (show when 3 or fewer scans left) */}
+        {state.freeTier.scansRemaining <= 3 && state.freeTier.scansRemaining > 0 && (
+          <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+            <CardContent className="p-4 flex gap-3">
+              <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                {t('folderSelection.scansRemaining', { count: state.freeTier.scansRemaining })}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Free tier limit reached - show upgrade message */}
+        {state.freeTier.isLimitReached && (
+          <Card className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900">
+            <CardContent className="p-4 flex gap-3">
+              <Shield className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  {t('folderSelection.outOfScans')}
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                  {t('folderSelection.upgradeToScan')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Start scan button */}
         <Button
           size="lg"
           className="w-full h-14 text-lg"
           onClick={handleStartScan}
-          disabled={!canStartScan && !usePreviousScan}
+          disabled={(!canStartScan && !usePreviousScan) || state.freeTier.isLimitReached}
         >
           {usePreviousScan
             ? (isSpanish ? 'Continuar con datos anteriores' : 'Continue with previous data')

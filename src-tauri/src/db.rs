@@ -9,9 +9,22 @@ pub struct DbPath(pub PathBuf);
 #[allow(dead_code)]
 pub struct DbConnection(pub Mutex<Connection>);
 
+/// Open a database connection with recommended pragmas (busy_timeout, WAL mode)
+/// Use this instead of Connection::open() throughout the codebase
+pub fn open_connection(path: &PathBuf) -> Result<Connection> {
+    let conn = Connection::open(path)?;
+    // Wait up to 5 seconds if database is locked
+    conn.execute_batch("PRAGMA busy_timeout = 5000;")?;
+    Ok(conn)
+}
+
 /// Initialize the SQLite database with required tables
 pub fn init_database(path: &PathBuf) -> Result<()> {
     let conn = Connection::open(path)?;
+
+    // Set pragmas for safety and performance
+    conn.execute_batch("PRAGMA busy_timeout = 5000;")?;  // Wait 5s if locked
+    conn.execute_batch("PRAGMA journal_mode = WAL;")?;   // Write-Ahead Logging for concurrency
 
     // Files table - core file index
     conn.execute(

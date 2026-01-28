@@ -41,6 +41,16 @@ interface ScannedFile {
   filename: string;
 }
 
+// Type for incremental scan result
+interface ScanResult {
+  new_files: number;
+  updated_files: number;
+  unchanged_files: number;
+  deleted_files: number;
+  total_files: number;
+  files: ScannedFile[];
+}
+
 // Bank of rotating status messages for AI analysis phase
 // Organized by tone: early (reassurance/trust), mid (technical/insight), late (outcome)
 const AI_STATUS_MESSAGES = [
@@ -235,16 +245,16 @@ export function ScanningScreen() {
           setTimeout(() => reject(new Error('Scan timed out after 60 seconds. Make sure you are running with "npm run tauri dev".')), 60000);
         });
 
-        // Call Tauri backend to scan with extension filter
-        const files = await Promise.race([
-          invoke<ScannedFile[]>('scan_directories', {
+        // Call Tauri backend to scan with extension filter (incremental scan)
+        const scanResult = await Promise.race([
+          invoke<ScanResult>('scan_directories', {
             directories: paths,
             extensions: state.selectedExtensions.length > 0 ? state.selectedExtensions : null,
           }),
           timeoutPromise,
         ]);
 
-        const fileCount = files.length;
+        const fileCount = scanResult.total_files;
 
         if (fileCount === 0) {
           // Show friendly empty state instead of error

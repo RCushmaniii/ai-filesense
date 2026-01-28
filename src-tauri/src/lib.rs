@@ -12,7 +12,36 @@ mod scanner;
 pub use category::{Category, normalize_folder};
 pub use document_type::DocumentType;
 
+use fs2::FileExt;
+use std::fs::{File, OpenOptions};
+use std::path::PathBuf;
 use tauri::Manager;
+
+/// Wrapper to hold the lock file handle (keeps lock alive for app lifetime)
+pub struct AppLock(#[allow(dead_code)] File);
+
+/// Acquire an exclusive lock file to prevent multiple instances
+fn acquire_app_lock(app_data_dir: &PathBuf) -> Result<File, String> {
+    use std::io::Write;
+
+    let lock_path = app_data_dir.join("filesense.lock");
+    let mut lock_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&lock_path)
+        .map_err(|e| format!("Could not open lock file: {}", e))?;
+
+    lock_file.try_lock_exclusive()
+        .map_err(|_| "Another instance of AI FileSense is already running.".to_string())?;
+
+    // Write our PID to the lock file for debugging/verification
+    let pid = std::process::id();
+    writeln!(lock_file, "{}", pid).ok();
+    lock_file.flush().ok();
+
+    Ok(lock_file)
+}
 
 /// Manually parse .env file to handle Windows edge cases that dotenvy misses
 fn load_env_file(path: &str) -> bool {
@@ -99,6 +128,11 @@ pub fn run() {
             // Initialize database on startup
             let app_data_dir = app.path().app_data_dir().expect("Failed to get app data dir");
             std::fs::create_dir_all(&app_data_dir).expect("Failed to create app data dir");
+
+            // Acquire exclusive lock to prevent multiple instances
+            let lock_file = acquire_app_lock(&app_data_dir)
+                .expect("Could not acquire app lock - another instance may be running");
+            app.manage(AppLock(lock_file));
 
             let db_path = app_data_dir.join("filesense.db");
             db::init_database(&db_path).expect("Failed to initialize database");

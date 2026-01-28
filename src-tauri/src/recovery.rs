@@ -10,24 +10,28 @@ use crate::activity_log::{
 };
 
 /// Check for incomplete sessions (status = in_progress)
-/// Returns the most recent incomplete session if found
-pub fn check_incomplete_sessions(conn: &Connection) -> SqlResult<Option<SessionLog>> {
-    // Find the most recent in_progress session
-    let session_id: Option<String> = conn
-        .query_row(
-            "SELECT session_id FROM sessions
-             WHERE status = 'in_progress'
-             ORDER BY started_at DESC
-             LIMIT 1",
-            [],
-            |row| row.get(0),
-        )
-        .ok();
+/// Returns all incomplete sessions (not just the most recent one)
+/// This allows users to recover older crashed sessions
+pub fn check_incomplete_sessions(conn: &Connection) -> SqlResult<Vec<SessionLog>> {
+    // Find all in_progress sessions, most recent first
+    let mut stmt = conn.prepare(
+        "SELECT session_id FROM sessions
+         WHERE status = 'in_progress'
+         ORDER BY started_at DESC"
+    )?;
 
-    match session_id {
-        Some(id) => get_session_log(conn, &id),
-        None => Ok(None),
+    let session_ids: Vec<String> = stmt
+        .query_map([], |row| row.get(0))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let mut sessions = Vec::new();
+    for session_id in session_ids {
+        if let Some(log) = get_session_log(conn, &session_id)? {
+            sessions.push(log);
+        }
     }
+    Ok(sessions)
 }
 
 /// Resume an incomplete session

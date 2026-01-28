@@ -20,9 +20,10 @@ import { useTranslation } from './i18n';
 import { Settings } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 
-interface IncompleteSession {
+interface SessionSummary {
   session_id: string;
   started_at: string;
+  completed_at: string | null;
   status: string;
   selected_mode: string | null;
   total_operations: number;
@@ -30,19 +31,39 @@ interface IncompleteSession {
   failed_operations: number;
 }
 
+interface IncompleteSession {
+  session: SessionSummary;
+  operations: unknown[];
+  errors: unknown[];
+}
+
 function AppContent() {
   const { state, dispatch } = useAppState();
   const { t } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
+  const [incompleteSessions, setIncompleteSessions] = useState<IncompleteSession[]>([]);
+
+  // Sync free tier usage from backend on startup (prevents bypass via devtools)
+  useEffect(() => {
+    const syncFreeTier = async () => {
+      try {
+        const scansUsed = await invoke<number>('get_scan_count');
+        dispatch({ type: 'SET_FREE_TIER_USAGE', scansUsed });
+      } catch (error) {
+        console.error('Error syncing free tier usage:', error);
+      }
+    };
+
+    syncFreeTier();
+  }, [dispatch]);
 
   // Check for incomplete sessions on startup (crash recovery)
   useEffect(() => {
     const checkIncomplete = async () => {
       try {
-        const session = await invoke<IncompleteSession | null>('get_incomplete_session_details');
-        if (session) {
-          setIncompleteSession(session);
+        const sessions = await invoke<IncompleteSession[]>('get_incomplete_session_details');
+        if (sessions && sessions.length > 0) {
+          setIncompleteSessions(sessions);
         }
       } catch (error) {
         console.error('Error checking incomplete sessions:', error);
@@ -198,11 +219,15 @@ function AppContent() {
         <SettingsScreen onClose={() => setIsSettingsOpen(false)} />
       )}
 
-      {/* Crash Recovery Dialog */}
-      {incompleteSession && (
+      {/* Crash Recovery Dialog - show first incomplete session (most recent) */}
+      {incompleteSessions.length > 0 && (
         <CrashRecoveryDialog
-          session={incompleteSession}
-          onResolved={() => setIncompleteSession(null)}
+          session={incompleteSessions[0]}
+          allSessions={incompleteSessions}
+          onResolved={() => {
+            // Remove the first session from the list; if more remain, they'll show next
+            setIncompleteSessions(prev => prev.slice(1));
+          }}
         />
       )}
     </div>

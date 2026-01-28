@@ -14,6 +14,9 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager, State};
 
+/// Free tier limit - maximum number of scans allowed
+const FREE_TIER_MAX_SCANS: u32 = 10;
+
 /// Known folder information
 #[derive(Debug, Clone, Serialize)]
 pub struct KnownFolder {
@@ -53,7 +56,7 @@ pub fn get_settings(app: AppHandle) -> AppSettings {
     AppSettings::default()
 }
 
-/// Save app settings to config file
+/// Save app settings to config file (atomic write to prevent corruption)
 #[tauri::command]
 pub fn save_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
     let settings_path = get_settings_path(&app);
@@ -64,24 +67,39 @@ pub fn save_settings(app: AppHandle, settings: AppSettings) -> Result<(), String
     }
 
     let json = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
-    fs::write(&settings_path, json).map_err(|e| e.to_string())?;
+
+    // Atomic write: write to temp file, then rename (prevents corruption on crash/race)
+    let temp_path = settings_path.with_extension("tmp");
+    fs::write(&temp_path, &json).map_err(|e| e.to_string())?;
+    fs::rename(&temp_path, &settings_path).map_err(|e| e.to_string())?;
+
     Ok(())
+}
+
+/// Internal: Get current scan count without tauri command wrapper
+fn get_scan_count_internal(app: &AppHandle) -> u32 {
+    let settings = get_settings(app.clone());
+    settings.scans_used
+}
+
+/// Internal: Increment scan count without tauri command wrapper
+fn increment_scan_count_internal(app: &AppHandle) -> Result<u32, String> {
+    let mut settings = get_settings(app.clone());
+    settings.scans_used += 1;
+    save_settings(app.clone(), settings.clone())?;
+    Ok(settings.scans_used)
 }
 
 /// Increment scan count (called after successful scan)
 #[tauri::command]
 pub fn increment_scan_count(app: AppHandle) -> Result<u32, String> {
-    let mut settings = get_settings(app.clone());
-    settings.scans_used += 1;
-    save_settings(app, settings.clone())?;
-    Ok(settings.scans_used)
+    increment_scan_count_internal(&app)
 }
 
 /// Get current scan count
 #[tauri::command]
 pub fn get_scan_count(app: AppHandle) -> u32 {
-    let settings = get_settings(app);
-    settings.scans_used
+    get_scan_count_internal(&app)
 }
 
 /// Test the API connection with the provided key
@@ -227,7 +245,7 @@ pub async fn classify_files(
 
     // Step 1: Get files from database (sync block, then drop connection)
     let (files, total, classified) = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         // Get files that haven't been classified yet
         let mut stmt = conn
@@ -282,7 +300,7 @@ pub async fn classify_files(
 
     // Step 3: Store results in database (new connection)
     let (final_total, final_classified) = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         for classification in &result.classifications {
             conn.execute(
@@ -327,7 +345,7 @@ pub async fn classify_files(
 pub async fn get_classification_estimate(
     db_path: State<'_, DbPath>,
 ) -> Result<ClassificationProgress, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let total: usize = conn
         .query_row("SELECT COUNT(*) FROM files", [], |row| row.get(0))
@@ -441,16 +459,64 @@ pub struct PlanSummary {
     pub folders_to_create: Vec<String>,
 }
 
-/// Scan specified directories and index files
+/// Result of incremental scan operation
+#[derive(Debug, Clone, Serialize)]
+pub struct ScanResult {
+    pub new_files: usize,
+    pub updated_files: usize,
+    pub unchanged_files: usize,
+    pub deleted_files: usize,
+    pub total_files: usize,
+    pub files: Vec<ScannedFile>,
+}
+
+/// Check if a file needs to be rescanned (different hash or modified date)
+fn file_needs_rescan(
+    conn: &Connection,
+    path: &str,
+    new_hash: &Option<String>,
+    new_modified: &Option<String>,
+) -> Result<bool, rusqlite::Error> {
+    match conn.query_row(
+        "SELECT content_hash, modified_at FROM files WHERE path = ?1",
+        [path],
+        |row| {
+            Ok((
+                row.get::<_, Option<String>>(0)?,
+                row.get::<_, Option<String>>(1)?,
+            ))
+        },
+    ) {
+        Ok((old_hash, old_modified)) => {
+            // File exists - check if it changed
+            Ok(new_hash != &old_hash || new_modified != &old_modified)
+        }
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(true), // New file
+        Err(e) => Err(e),
+    }
+}
+
+/// Scan specified directories and index files (incremental - preserves AI metadata for unchanged files)
 /// If extensions is provided, only scan files with those extensions
+/// Enforces free tier scan limit on the backend (cannot be bypassed via devtools)
 #[tauri::command]
 pub async fn scan_directories(
     directories: Vec<String>,
     extensions: Option<Vec<String>>,
+    app: AppHandle,
     db_path: State<'_, DbPath>,
-) -> Result<Vec<ScannedFile>, String> {
+) -> Result<ScanResult, String> {
+    // Backend free tier enforcement - check scan count BEFORE scanning
+    let current_scans = get_scan_count_internal(&app);
+    if current_scans >= FREE_TIER_MAX_SCANS {
+        return Err(format!(
+            "Free tier limit reached ({}/{} scans used). Upgrade to continue organizing files.",
+            current_scans, FREE_TIER_MAX_SCANS
+        ));
+    }
+
     let config = ScanConfig {
-        directories: directories.into_iter().map(PathBuf::from).collect(),
+        directories: directories.iter().map(|d| PathBuf::from(d)).collect(),
         include_hidden: false,
         max_depth: Some(10),
         compute_hashes: true,
@@ -459,42 +525,155 @@ pub async fn scan_directories(
 
     let files = scanner::scan_directories(&config);
 
-    // Store in database
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    // Store in database incrementally (preserve AI metadata for unchanged files)
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
-    // Clean up old data to prevent foreign key constraint issues
-    // Order matters due to foreign key dependencies
-    conn.execute("DELETE FROM plan_items", []).ok();
-    conn.execute("DELETE FROM organization_plans", []).ok();
-    conn.execute("DELETE FROM move_history", []).ok();
-    conn.execute("DELETE FROM content_snippets", []).ok();
-    conn.execute("DELETE FROM ai_metadata", []).ok();
-    conn.execute("DELETE FROM files", []).ok();
+    // Track which paths we see in this scan (lowercase for case-insensitive comparison on Windows)
+    let mut seen_paths = std::collections::HashSet::new();
+    let mut new_files = 0;
+    let mut updated_files = 0;
+    let mut unchanged_files = 0;
 
     for file in &files {
-        conn.execute(
-            "INSERT OR REPLACE INTO files (path, filename, extension, size, created_at, modified_at, content_hash, last_scanned_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP)",
-            (
-                file.path.to_string_lossy().to_string(),
-                &file.filename,
-                &file.extension,
-                file.size as i64,
-                &file.created_at,
-                &file.modified_at,
-                &file.content_hash,
-            ),
-        )
-        .map_err(|e| e.to_string())?;
+        let path_str = file.path.to_string_lossy().to_string();
+        // Use lowercase for case-insensitive path tracking on Windows
+        seen_paths.insert(path_str.to_lowercase());
+
+        let needs_update = file_needs_rescan(&conn, &path_str, &file.content_hash, &file.modified_at)
+            .map_err(|e| e.to_string())?;
+
+        if needs_update {
+            // Check if this is a new file or update
+            let is_new: bool = conn
+                .query_row(
+                    "SELECT 1 FROM files WHERE path = ?1",
+                    [&path_str],
+                    |_| Ok(false),
+                )
+                .unwrap_or(true);
+
+            // Upsert file record
+            conn.execute(
+                "INSERT INTO files (path, filename, extension, size, created_at, modified_at, content_hash, last_scanned_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP)
+                 ON CONFLICT(path) DO UPDATE SET
+                     filename = excluded.filename,
+                     extension = excluded.extension,
+                     size = excluded.size,
+                     created_at = excluded.created_at,
+                     modified_at = excluded.modified_at,
+                     content_hash = excluded.content_hash,
+                     last_scanned_at = CURRENT_TIMESTAMP",
+                rusqlite::params![
+                    &path_str,
+                    &file.filename,
+                    &file.extension,
+                    file.size as i64,
+                    &file.created_at,
+                    &file.modified_at,
+                    &file.content_hash,
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+
+            // Clear stale AI metadata for changed files only (not new files)
+            if !is_new {
+                // Get file_id to clear related data
+                if let Ok(file_id) = conn.query_row(
+                    "SELECT id FROM files WHERE path = ?1",
+                    [&path_str],
+                    |row| row.get::<_, i64>(0),
+                ) {
+                    conn.execute(
+                        "DELETE FROM ai_metadata WHERE file_id = ?1",
+                        [file_id],
+                    )
+                    .ok();
+                    conn.execute(
+                        "DELETE FROM content_snippets WHERE file_id = ?1",
+                        [file_id],
+                    )
+                    .ok();
+                }
+                updated_files += 1;
+            } else {
+                new_files += 1;
+            }
+        } else {
+            // File unchanged - just update last_scanned_at timestamp
+            conn.execute(
+                "UPDATE files SET last_scanned_at = CURRENT_TIMESTAMP WHERE path = ?1",
+                [&path_str],
+            )
+            .ok();
+            unchanged_files += 1;
+        }
     }
 
-    Ok(files)
+    // Remove files that no longer exist in the scanned directories
+    // Only delete files that are within the scanned directories and weren't seen
+    let mut deleted_files = 0;
+    for dir in &directories {
+        // Find files in this directory that weren't seen in this scan
+        // Ensure we match full directory path (add separator to prevent matching C:\Downloads2 when scanning C:\Downloads)
+        let dir_with_sep = if dir.ends_with('\\') || dir.ends_with('/') {
+            dir.clone()
+        } else {
+            format!("{}\\", dir)
+        };
+        let dir_pattern = format!("{}%", dir_with_sep.replace('\\', "\\\\"));
+        let stale_file_ids: Vec<i64> = {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, path FROM files WHERE path LIKE ?1 COLLATE NOCASE",
+                )
+                .map_err(|e| e.to_string())?;
+
+            let rows = stmt
+                .query_map([&dir_pattern], |row| {
+                    Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+                })
+                .map_err(|e| e.to_string())?;
+
+            rows.filter_map(|r| r.ok())
+                .filter(|(_, path)| !seen_paths.contains(&path.to_lowercase()))
+                .map(|(id, _)| id)
+                .collect()
+        };
+
+        for file_id in stale_file_ids {
+            // Delete associated data first (foreign key order)
+            conn.execute("DELETE FROM ai_metadata WHERE file_id = ?1", [file_id]).ok();
+            conn.execute("DELETE FROM content_snippets WHERE file_id = ?1", [file_id]).ok();
+            conn.execute("DELETE FROM plan_items WHERE file_id = ?1", [file_id]).ok();
+            conn.execute("DELETE FROM move_history WHERE file_id = ?1", [file_id]).ok();
+            conn.execute("DELETE FROM files WHERE id = ?1", [file_id]).ok();
+            deleted_files += 1;
+        }
+    }
+
+    let total_files = new_files + updated_files + unchanged_files;
+
+    // Backend free tier enforcement - increment scan count AFTER successful scan
+    // This ensures the count only increases for successful scans
+    if total_files > 0 {
+        increment_scan_count_internal(&app)?;
+    }
+
+    Ok(ScanResult {
+        new_files,
+        updated_files,
+        unchanged_files,
+        deleted_files,
+        total_files,
+        files,
+    })
 }
 
 /// Get current scan status
 #[tauri::command]
 pub async fn get_scan_status(db_path: State<'_, DbPath>) -> Result<ScanStatus, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let total_files: usize = conn
         .query_row("SELECT COUNT(*) FROM files", [], |row| row.get(0))
@@ -526,7 +705,7 @@ pub async fn search_files(
     query: String,
     db_path: State<'_, DbPath>,
 ) -> Result<Vec<SearchResult>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     // Use FTS5 for search, fallback to LIKE if no results
     let mut stmt = conn
@@ -565,7 +744,7 @@ pub async fn get_file_details(
     file_id: i64,
     db_path: State<'_, DbPath>,
 ) -> Result<FileDetails, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let details = conn
         .query_row(
@@ -600,7 +779,7 @@ pub async fn get_file_details(
 /// Count duplicate files (same filename + extension in different locations)
 #[tauri::command]
 pub fn count_duplicates(db_path: State<'_, DbPath>) -> Result<usize, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let count: i64 = conn.query_row(
         "SELECT COUNT(*) FROM (
@@ -853,7 +1032,7 @@ pub async fn generate_organization_plan(
 
     // Count duplicates (same filename + extension in different locations)
     let duplicates_found: usize = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         // Find files with same filename + extension that appear more than once
         let count: i64 = conn.query_row(
@@ -872,7 +1051,7 @@ pub async fn generate_organization_plan(
 
     // Query files with classifications
     let files_with_metadata: Vec<(i64, String, String, Option<String>, Option<String>, Option<String>, Option<String>, f64, Option<String>)> = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         let mut stmt = conn.prepare(
             "SELECT f.id, f.path, f.filename, f.extension, f.modified_at,
@@ -1043,7 +1222,7 @@ pub async fn generate_organization_plan(
 
     // Save plan to database
     {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         conn.execute(
             "INSERT INTO organization_plans (id, name, organization_style, status) VALUES (?1, ?2, ?3, 'pending')",
@@ -1225,7 +1404,7 @@ pub async fn execute_plan(
 
     // Load plan items from database
     let items: Vec<(i64, String, String)> = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         let mut stmt = conn.prepare(
             "SELECT file_id, source_path, destination_path
@@ -1273,7 +1452,7 @@ pub async fn execute_plan(
         if !source.exists() && dest_original.exists() {
             // File was already moved - update database and count as success
             files_skipped += 1;
-            if let Ok(conn) = Connection::open(&db_path_clone) {
+            if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
                 conn.execute(
                     "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
                     rusqlite::params![&plan_id, file_id],
@@ -1319,7 +1498,7 @@ pub async fn execute_plan(
         // Test mode: simulate the move without actually doing it
         if is_test_mode {
             // In test mode, just count as successful without moving
-            if let Ok(conn) = Connection::open(&db_path_clone) {
+            if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
                 conn.execute(
                     "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
                     rusqlite::params![&plan_id, file_id],
@@ -1335,7 +1514,7 @@ pub async fn execute_plan(
         match move_result {
             Ok(_) => {
                 // Successfully moved via rename
-                if let Ok(conn) = Connection::open(&db_path_clone) {
+                if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
                     // Record in move history (ignore errors - non-critical)
                     conn.execute(
                         "INSERT INTO move_history (plan_id, file_id, source_path, destination_path)
@@ -1371,7 +1550,7 @@ pub async fn execute_plan(
                         }
 
                         // Update database
-                        if let Ok(conn) = Connection::open(&db_path_clone) {
+                        if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
                             conn.execute(
                                 "INSERT INTO move_history (plan_id, file_id, source_path, destination_path)
                                  VALUES (?1, ?2, ?3, ?4)",
@@ -1401,7 +1580,7 @@ pub async fn execute_plan(
     }
 
     // Update plan status
-    if let Ok(conn) = Connection::open(&db_path_clone) {
+    if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
         conn.execute(
             "UPDATE organization_plans SET status = 'executed', executed_at = CURRENT_TIMESTAMP WHERE id = ?1",
             rusqlite::params![&plan_id],
@@ -1426,7 +1605,7 @@ pub async fn undo_last_operation(
 
     // Get the most recent plan that was executed and not yet undone
     let moves: Vec<(i64, i64, String, String)> = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         // Get moves from most recent executed plan that hasn't been undone
         let mut stmt = conn.prepare(
@@ -1480,7 +1659,7 @@ pub async fn undo_last_operation(
 
         if move_result.is_ok() {
             // Mark as undone in history
-            let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+            let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
             conn.execute(
                 "UPDATE move_history SET undone = 1, undone_at = CURRENT_TIMESTAMP WHERE id = ?1",
@@ -1511,7 +1690,7 @@ pub fn start_organization_session(
     user_type: Option<String>,
     db_path: State<'_, DbPath>,
 ) -> Result<String, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::create_session(&conn, mode.as_deref(), user_type.as_deref())
         .map_err(|e| e.to_string())
 }
@@ -1523,7 +1702,7 @@ pub fn complete_organization_session(
     status: String,
     db_path: State<'_, DbPath>,
 ) -> Result<(), String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     let session_status = SessionStatus::from_str(&status)
         .ok_or_else(|| format!("Invalid status: {}", status))?;
     activity_log::complete_session(&conn, &session_id, session_status)
@@ -1545,7 +1724,7 @@ pub fn log_file_operation(
     document_type: Option<String>,
     db_path: State<'_, DbPath>,
 ) -> Result<i32, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let operation = Operation {
         op_type: match op_type.as_str() {
@@ -1579,7 +1758,7 @@ pub fn update_operation_status(
     error_message: Option<String>,
     db_path: State<'_, DbPath>,
 ) -> Result<(), String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let op_status = OperationStatus::from_str(&status)
         .ok_or_else(|| format!("Invalid status: {}", status))?;
@@ -1599,7 +1778,7 @@ pub fn get_recent_sessions(
     limit: Option<i32>,
     db_path: State<'_, DbPath>,
 ) -> Result<Vec<activity_log::SessionSummary>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::get_recent_sessions(&conn, limit.unwrap_or(10))
         .map_err(|e| e.to_string())
 }
@@ -1610,7 +1789,7 @@ pub fn get_session_log(
     session_id: String,
     db_path: State<'_, DbPath>,
 ) -> Result<Option<activity_log::SessionLog>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::get_session_log(&conn, &session_id)
         .map_err(|e| e.to_string())
 }
@@ -1622,7 +1801,7 @@ pub fn undo_session_operation(
     op_id: i32,
     db_path: State<'_, DbPath>,
 ) -> Result<activity_log::UndoResult, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::undo_operation(&conn, &session_id, op_id)
         .map_err(|e| e.to_string())
 }
@@ -1633,7 +1812,7 @@ pub fn undo_entire_session(
     session_id: String,
     db_path: State<'_, DbPath>,
 ) -> Result<activity_log::SessionUndoResult, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::undo_session(&conn, &session_id)
         .map_err(|e| e.to_string())
 }
@@ -1643,7 +1822,7 @@ pub fn undo_entire_session(
 pub fn check_incomplete_sessions(
     db_path: State<'_, DbPath>,
 ) -> Result<Vec<activity_log::SessionSummary>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::check_incomplete_sessions(&conn)
         .map_err(|e| e.to_string())
 }
@@ -1654,7 +1833,7 @@ pub fn export_session_log(
     session_id: String,
     db_path: State<'_, DbPath>,
 ) -> Result<Option<String>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::export_human_readable(&conn, &session_id)
         .map_err(|e| e.to_string())
 }
@@ -1665,7 +1844,7 @@ pub fn cleanup_old_sessions(
     retention_days: Option<i32>,
     db_path: State<'_, DbPath>,
 ) -> Result<i32, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     activity_log::cleanup_old_logs(&conn, retention_days.unwrap_or(90))
         .map_err(|e| e.to_string())
 }
@@ -1674,12 +1853,13 @@ pub fn cleanup_old_sessions(
 // Crash Recovery Commands (per doc 07)
 // ============================================
 
-/// Get full details of an incomplete session for crash recovery dialog
+/// Get full details of all incomplete sessions for crash recovery dialog
+/// Returns all incomplete sessions (not just the most recent one) so users can recover older crashed sessions
 #[tauri::command]
 pub fn get_incomplete_session_details(
     db_path: State<'_, DbPath>,
-) -> Result<Option<activity_log::SessionLog>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+) -> Result<Vec<activity_log::SessionLog>, String> {
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     crate::recovery::check_incomplete_sessions(&conn)
         .map_err(|e| e.to_string())
 }
@@ -1690,7 +1870,7 @@ pub fn resume_incomplete_session(
     session_id: String,
     db_path: State<'_, DbPath>,
 ) -> Result<activity_log::SessionLog, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     crate::recovery::resume_session(&conn, &session_id)
         .map_err(|e| e.to_string())
 }
@@ -1701,7 +1881,7 @@ pub fn rollback_incomplete_session(
     session_id: String,
     db_path: State<'_, DbPath>,
 ) -> Result<activity_log::SessionUndoResult, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     crate::recovery::rollback_incomplete(&conn, &session_id)
         .map_err(|e| e.to_string())
 }
@@ -1712,7 +1892,7 @@ pub fn discard_incomplete_session(
     session_id: String,
     db_path: State<'_, DbPath>,
 ) -> Result<(), String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
     crate::recovery::discard_incomplete(&conn, &session_id)
         .map_err(|e| e.to_string())
 }
@@ -1733,7 +1913,7 @@ pub struct CategoryBreakdown {
 pub fn get_category_breakdown(
     db_path: State<'_, DbPath>,
 ) -> Result<Vec<CategoryBreakdown>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let mut stmt = conn.prepare(
         "SELECT
@@ -1780,7 +1960,7 @@ pub struct ClassifiedFile {
 pub fn get_files_by_category(
     db_path: State<'_, DbPath>,
 ) -> Result<Vec<ClassifiedFile>, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let mut stmt = conn.prepare(
         "SELECT
@@ -1908,7 +2088,7 @@ pub async fn get_clarification_questions(
 
     // Step 1: Gather file data from database (sync block)
     let (category_stats, low_confidence_files, ambiguous_groups) = {
-        let conn = Connection::open(&db_path_clone).map_err(|e| e.to_string())?;
+        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
         // Get category statistics
         let mut stmt = conn.prepare(
@@ -2232,7 +2412,7 @@ pub fn apply_clarification_answer(
     target_category: Option<String>,
     db_path: State<'_, DbPath>,
 ) -> Result<i32, String> {
-    let conn = Connection::open(&db_path.0).map_err(|e| e.to_string())?;
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
 
     let mut updated = 0;
 

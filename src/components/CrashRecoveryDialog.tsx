@@ -20,9 +20,10 @@ import {
   XCircle,
 } from 'lucide-react';
 
-interface SessionLog {
+interface SessionSummary {
   session_id: string;
   started_at: string;
+  completed_at: string | null;
   status: string;
   selected_mode: string | null;
   total_operations: number;
@@ -30,17 +31,28 @@ interface SessionLog {
   failed_operations: number;
 }
 
+interface SessionLog {
+  session: SessionSummary;
+  operations: unknown[];
+  errors: unknown[];
+}
+
 interface CrashRecoveryDialogProps {
   session: SessionLog;
+  allSessions?: SessionLog[];  // Optional: all incomplete sessions for future session selector
   onResolved: () => void;
 }
 
 type RecoveryAction = 'idle' | 'processing' | 'success' | 'error';
 
-export function CrashRecoveryDialog({ session, onResolved }: CrashRecoveryDialogProps) {
+export function CrashRecoveryDialog({ session, allSessions, onResolved }: CrashRecoveryDialogProps) {
   const { t } = useTranslation();
   const [action, setAction] = useState<RecoveryAction>('idle');
   const [message, setMessage] = useState('');
+
+  // Extract the session summary from the SessionLog structure
+  const sessionInfo = session.session;
+  const additionalSessionsCount = (allSessions?.length ?? 1) - 1;
 
   const formatDate = (dateStr: string) => {
     try {
@@ -54,7 +66,7 @@ export function CrashRecoveryDialog({ session, onResolved }: CrashRecoveryDialog
   const handleResume = async () => {
     setAction('processing');
     try {
-      await invoke('resume_incomplete_session', { sessionId: session.session_id });
+      await invoke('resume_incomplete_session', { sessionId: sessionInfo.session_id });
       setAction('success');
       // Wait briefly then close dialog
       setTimeout(onResolved, 500);
@@ -70,7 +82,7 @@ export function CrashRecoveryDialog({ session, onResolved }: CrashRecoveryDialog
     try {
       const result = await invoke<{ operations_undone: number; failures: string[] }>(
         'rollback_incomplete_session',
-        { sessionId: session.session_id }
+        { sessionId: sessionInfo.session_id }
       );
       setAction('success');
       setMessage(t('crashRecovery.rollbackSuccess', { count: result.operations_undone }));
@@ -85,7 +97,7 @@ export function CrashRecoveryDialog({ session, onResolved }: CrashRecoveryDialog
   const handleDiscard = async () => {
     setAction('processing');
     try {
-      await invoke('discard_incomplete_session', { sessionId: session.session_id });
+      await invoke('discard_incomplete_session', { sessionId: sessionInfo.session_id });
       setAction('success');
       setMessage(t('crashRecovery.discardSuccess'));
       setTimeout(onResolved, 1000);
@@ -124,14 +136,19 @@ export function CrashRecoveryDialog({ session, onResolved }: CrashRecoveryDialog
           {/* Session Info */}
           <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
             <p className="text-muted-foreground">
-              {t('crashRecovery.sessionInfo', { date: formatDate(session.started_at) })}
+              {t('crashRecovery.sessionInfo', { date: formatDate(sessionInfo.started_at) })}
             </p>
             <p className="font-medium">
               {t('crashRecovery.operationsCompleted', {
-                completed: session.successful_operations,
-                total: session.total_operations,
+                completed: sessionInfo.successful_operations,
+                total: sessionInfo.total_operations,
               })}
             </p>
+            {additionalSessionsCount > 0 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                +{additionalSessionsCount} more incomplete session{additionalSessionsCount > 1 ? 's' : ''} found
+              </p>
+            )}
           </div>
 
           {/* Status Message */}

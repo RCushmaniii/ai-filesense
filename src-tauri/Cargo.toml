@@ -36,6 +36,9 @@ zip = "2.1"                    # For extracting .docx, .pptx (Office Open XML)
 quick-xml = "0.36"             # For parsing XML inside Office documents
 pdf-extract = "0.7"            # For extracting text from PDFs
 
+# File locking for single-instance enforcement
+fs2 = "0.4"
+
 [profile.dev]
 incremental = true
 

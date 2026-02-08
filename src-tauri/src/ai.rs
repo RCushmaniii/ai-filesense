@@ -334,7 +334,7 @@ impl AIClient {
         }
 
         format!(
-            r#"You are a File Classification Engine. Classify files into 11 canonical smart folders.
+            r#"You are a File Classification Engine. Classify files into 12 canonical smart folders.
 
 ### INPUT FORMAT
 Array of objects with:
@@ -358,8 +358,8 @@ Return a single JSON object:
   ]
 }}
 
-### CATEGORIES (Use ONLY these 11 categories)
-["Work", "Money", "Home", "Health", "Legal", "School", "Family", "Clients", "Projects", "Archive", "Review"]
+### CATEGORIES (Use ONLY these 12 categories)
+["Work", "Money", "Home", "Health", "Legal", "School", "Family", "Clients", "Projects", "Travel", "Archive", "Review"]
 
 ### WHAT BELONGS IN EACH CATEGORY
 | Category | When to Use | Typical Contents |
@@ -368,12 +368,13 @@ Return a single JSON object:
 | Money | Finances and banking | Bank statements, taxes, investments, receipts, bills, invoices, budgets |
 | Home | Property and housing | Mortgage, rent, utilities, repairs, warranties, car titles, deeds |
 | Health | Medical and wellness | Medical records, prescriptions, lab results, health insurance, dental |
-| Legal | Contracts and legal | Agreements, contracts, court docs, licenses, wills, IDs, passports |
+| Legal | Contracts and legal | Agreements, contracts, court docs, licenses, wills, IDs |
 | School | Education and learning | Courses, certificates, transcripts, research, degrees, training |
 | Family | Personal relationships | Family correspondence, kids' records, personal letters, photos |
 | Clients | Business clients | Client docs, vendor contracts, customer correspondence, invoices |
 | Projects | Active projects | Project deliverables, milestones, project-specific documents |
-| Archive | Historical/inactive | Old docs (3+ years), completed projects, historical records, travel |
+| Travel | Trips and travel docs | Passports, visas, boarding passes, hotel bookings, itineraries, travel insurance |
+| Archive | Historical/inactive | Old docs (3+ years), completed projects, historical records |
 | Review | Low-confidence items | User decision required, uncertain files |
 
 ### SUBCATEGORY_MAP (Use these values, null, or create dynamic subfolders)
@@ -387,6 +388,7 @@ Return a single JSON object:
   "Family": null,
   "Clients": null,
   "Projects": null,
+  "Travel": ["Flights", "Hotels", "Itineraries", "Visas", "Bookings"],
   "Archive": ["2024", "2023", "2022", "2021", "Older"],
   "Review": null
 }}
@@ -405,12 +407,13 @@ For categories with null subfolders (Family, Clients, Projects), create dynamic 
 | Bank statement, tax return, W-2, 1099, invoice, receipt, payment | Money |
 | Mortgage, deed, title, rent, lease, utility bill, home repair, warranty | Home |
 | Medical, prescription, diagnosis, lab result, HIPAA, patient, doctor | Health |
-| Contract, agreement, NDA, court, lawsuit, attorney, legal, license, passport, ID | Legal |
+| Contract, agreement, NDA, court, lawsuit, attorney, legal, license, ID | Legal |
 | Course, certificate, transcript, degree, training, university, education | School |
 | Child, kids, spouse, family, personal letter, family member names | Family |
 | Client, vendor, customer, "Bill To:", business invoice, company | Clients |
 | "Project:", deliverable, milestone, project name | Projects |
-| 3+ years old, historical, archived, completed, inactive, travel, itinerary | Archive |
+| Passport, visa, boarding pass, flight, hotel, itinerary, travel insurance | Travel |
+| 3+ years old, historical, archived, completed, inactive | Archive |
 
 **PRIORITY 2: CONTEXTUAL (when content unclear)**
 - Employment context → Work
@@ -422,6 +425,7 @@ For categories with null subfolders (Family, Clients, Projects), create dynamic 
 - Family context → Family
 - Client/business context → Clients
 - Project-based context → Projects
+- Travel/trip context → Travel
 - Old/historical context → Archive
 - Completely unclear → Review
 

@@ -38,11 +38,11 @@ import {
   Loader2,
 } from 'lucide-react';
 
-// The 11 guardrail folders in order
+// The 12 guardrail folders in order
 // Note: Display number (for UI) vs actual folder number (on disk) may differ
-// Review is shown first (00) for visibility but its actual folder is "11 Review"
+// Review is shown first (00) for visibility but its actual folder is "12 Review"
 const GUARDRAIL_FOLDERS = [
-  { id: 'Review', displayNumber: '00', folderNumber: '11', color: 'amber' },
+  { id: 'Review', displayNumber: '00', folderNumber: '12', color: 'amber' },
   { id: 'Work', displayNumber: '01', folderNumber: '01', color: 'blue' },
   { id: 'Money', displayNumber: '02', folderNumber: '02', color: 'green' },
   { id: 'Home', displayNumber: '03', folderNumber: '03', color: 'orange' },
@@ -52,7 +52,8 @@ const GUARDRAIL_FOLDERS = [
   { id: 'Family', displayNumber: '07', folderNumber: '07', color: 'pink' },
   { id: 'Clients', displayNumber: '08', folderNumber: '08', color: 'indigo' },
   { id: 'Projects', displayNumber: '09', folderNumber: '09', color: 'teal' },
-  { id: 'Archive', displayNumber: '10', folderNumber: '10', color: 'slate' },
+  { id: 'Travel', displayNumber: '10', folderNumber: '10', color: 'sky' },
+  { id: 'Archive', displayNumber: '11', folderNumber: '11', color: 'slate' },
 ] as const;
 
 // Folder info explanations
@@ -67,6 +68,7 @@ const FOLDER_INFO: Record<string, { purposeKey: string; signalsKey: string }> = 
   Family: { purposeKey: 'dashboard.folderInfo.family.purpose', signalsKey: 'dashboard.folderInfo.family.signals' },
   Clients: { purposeKey: 'dashboard.folderInfo.clients.purpose', signalsKey: 'dashboard.folderInfo.clients.signals' },
   Projects: { purposeKey: 'dashboard.folderInfo.projects.purpose', signalsKey: 'dashboard.folderInfo.projects.signals' },
+  Travel: { purposeKey: 'dashboard.folderInfo.travel.purpose', signalsKey: 'dashboard.folderInfo.travel.signals' },
   Archive: { purposeKey: 'dashboard.folderInfo.archive.purpose', signalsKey: 'dashboard.folderInfo.archive.signals' },
 };
 
@@ -187,7 +189,7 @@ export function DashboardScreen() {
 
   const handleReviewNow = async () => {
     try {
-      await invoke('open_folder', { path: 'Organized Files/11 Review' });
+      await invoke('open_folder', { path: 'Organized Files/12 Review' });
     } catch (err) {
       console.error('[Dashboard] Error opening Review folder:', err);
     }
@@ -249,6 +251,7 @@ export function DashboardScreen() {
       pink: { bg: 'bg-pink-50 dark:bg-pink-950/30', text: 'text-pink-600 dark:text-pink-400', border: 'border-pink-200 dark:border-pink-800' },
       indigo: { bg: 'bg-indigo-50 dark:bg-indigo-950/30', text: 'text-indigo-600 dark:text-indigo-400', border: 'border-indigo-200 dark:border-indigo-800' },
       teal: { bg: 'bg-teal-50 dark:bg-teal-950/30', text: 'text-teal-600 dark:text-teal-400', border: 'border-teal-200 dark:border-teal-800' },
+      sky: { bg: 'bg-sky-50 dark:bg-sky-950/30', text: 'text-sky-600 dark:text-sky-400', border: 'border-sky-200 dark:border-sky-800' },
       slate: { bg: 'bg-slate-50 dark:bg-slate-950/30', text: 'text-slate-600 dark:text-slate-400', border: 'border-slate-200 dark:border-slate-800' },
     };
     return colorMap[color] || colorMap.slate;

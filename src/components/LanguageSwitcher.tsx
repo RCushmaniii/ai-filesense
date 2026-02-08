@@ -1,19 +1,37 @@
 import { useI18n, languages, Language } from '../i18n';
 import { Globe } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 export function LanguageSwitcher({ minimal = false }: { minimal?: boolean }) {
   const { language, setLanguage, t } = useI18n();
 
   if (minimal) {
+    const isSpanish = language === 'es-MX';
     return (
-      <button
-        onClick={() => setLanguage(language === 'en' ? 'es-MX' : 'en')}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      <div
+        className="flex items-center gap-1.5 px-3 py-2"
         aria-label={t('welcome.selectLanguage')}
       >
-        <Globe className="w-4 h-4" />
-        <span>{languages[language].nativeName}</span>
-      </button>
+        <span
+          className={`text-xs font-mono transition-colors ${
+            !isSpanish ? 'font-semibold text-foreground' : 'text-muted-foreground'
+          }`}
+        >
+          EN
+        </span>
+        <Switch
+          checked={isSpanish}
+          onCheckedChange={(checked) => setLanguage(checked ? 'es-MX' : 'en')}
+          className="scale-75"
+        />
+        <span
+          className={`text-xs font-mono transition-colors ${
+            isSpanish ? 'font-semibold text-foreground' : 'text-muted-foreground'
+          }`}
+        >
+          ES
+        </span>
+      </div>
     );
   }
 

@@ -54,7 +54,7 @@ export interface FreeTierUsage {
 }
 
 // Organization styles - Three modes
-// All modes use the 11-folder numbered system (01-11 for sort order)
+// All modes use the 12-folder numbered system (01-12 for sort order)
 // - simple: Life areas (Work, Money, Home, Health, etc.)
 // - timeline: By Year with subfolders (2025/Q1, 2024/Q2, etc.)
 // - smart_groups: Client/Project-based (AI detects companies, projects)

@@ -44,7 +44,7 @@ interface StyleOption {
   folders: FolderPreview[];
 }
 
-// Detailed folder structures showing the 11-folder numbered system
+// Detailed folder structures showing the 12-folder numbered system
 const styleOptions: StyleOption[] = [
   {
     id: 'simple',
@@ -66,7 +66,7 @@ const styleOptions: StyleOption[] = [
       { name: '2025', children: ['Q1', 'Q2', 'Q3', 'Q4'] },
       { name: '2024', children: ['Q1', 'Q2', 'Q3', 'Q4'] },
       { name: '2023', children: ['Full Year'] },
-      { name: '10 Archive', children: ['Older'] },
+      { name: '11 Archive', children: ['Older'] },
     ],
   },
   {
@@ -77,7 +77,7 @@ const styleOptions: StyleOption[] = [
       { name: '08 Clients', children: ['Acme Corp', 'BigCo', 'StartupXYZ'] },
       { name: '09 Projects', children: ['Q4 Report', 'Website', 'Marketing'] },
       { name: '02 Money', children: ['Invoices', 'Expenses'] },
-      { name: '10 Archive', children: ['Completed'] },
+      { name: '11 Archive', children: ['Completed'] },
     ],
   },
 ];

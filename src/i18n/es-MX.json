@@ -144,7 +144,7 @@
       "options": {
         "flat": {
           "label": "Mantenerlo simple",
-          "desc": "Mostrar solo las carpetas principales (11 categorías)"
+          "desc": "Mostrar solo las carpetas principales (12 categorías)"
         },
         "moderate": {
           "label": "Algunas subcarpetas",
@@ -206,10 +206,10 @@
   },
   "organizationStyles": {
     "title": "¿Cómo te gustaría organizar?",
-    "subtitle": "Cada estilo crea una estructura de carpetas diferente. Todos usan carpetas numeradas (01-11) para ordenación consistente.",
+    "subtitle": "Cada estilo crea una estructura de carpetas diferente. Todos usan carpetas numeradas (01-12) para ordenación consistente.",
     "simple": {
       "name": "Áreas de Vida",
-      "description": "Agrupa archivos en 11 carpetas inteligentes: Trabajo, Dinero, Casa, Salud, Legal, Escuela, Familia y Amigos, Clientes, Proyectos, Archivo y Revisar.",
+      "description": "Agrupa archivos en 12 carpetas inteligentes: Trabajo, Dinero, Casa, Salud, Legal, Escuela, Familia y Amigos, Clientes, Proyectos, Viajes, Archivo y Revisar.",
       "bestFor": "Archivos personales y familiares"
     },
     "timeline": {
@@ -497,6 +497,10 @@
         "purpose": "Documentos y archivos específicos de proyectos.",
         "signals": "Planes de proyecto, entregables, notas de reuniones, recursos."
       },
+      "travel": {
+        "purpose": "Documentos de viaje y registros de viajes.",
+        "signals": "Pasaportes, visas, pases de abordar, reservaciones de hotel, itinerarios."
+      },
       "archive": {
         "purpose": "Archivos antiguos organizados por año.",
         "signals": "Documentos de más de 3 años, registros históricos."
@@ -533,6 +537,7 @@
     "Family": "Familia y Amigos",
     "Clients": "Clientes",
     "Projects": "Proyectos",
+    "Travel": "Viajes",
     "Archive": "Archivo",
     "Review": "Revisar"
   }

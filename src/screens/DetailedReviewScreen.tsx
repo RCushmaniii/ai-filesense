@@ -43,7 +43,8 @@ const NUMBERED_FOLDERS: { category: Category; number: string }[] = [
   { category: 'Family', number: '07' },
   { category: 'Clients', number: '08' },
   { category: 'Projects', number: '09' },
-  { category: 'Archive', number: '10' },
+  { category: 'Travel', number: '10' },
+  { category: 'Archive', number: '11' },
 ];
 
 // Mock file data for now - in production this comes from the plan

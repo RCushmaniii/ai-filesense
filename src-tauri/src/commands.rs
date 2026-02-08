@@ -797,7 +797,7 @@ pub fn count_duplicates(db_path: State<'_, DbPath>) -> Result<usize, String> {
 
 /// Smart categorization based on filename patterns
 /// Returns (category, subcategory) using canonical 11-category enum:
-/// Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Archive, Review
+/// Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Travel, Archive, Review
 fn categorize_by_filename(name_lower: &str) -> Option<(String, Option<String>)> {
     // Financial documents → Money
     if name_lower.contains("invoice") || name_lower.contains("receipt") || name_lower.contains("bill") ||
@@ -884,16 +884,16 @@ fn categorize_by_filename(name_lower: &str) -> Option<(String, Option<String>)> 
         return Some(("Money".to_string(), Some("Insurance".to_string())));
     }
 
-    // Travel: passport/visa → Legal (IDs), tickets/hotels → Archive
+    // Travel: passport/visa → Travel/Visas, tickets → Travel/Flights, hotels → Travel/Hotels
     if name_lower.contains("passport") || name_lower.contains("visa") || name_lower.contains("pasaporte") {
-        return Some(("Legal".to_string(), Some("IDs".to_string())));
+        return Some(("Travel".to_string(), Some("Visas".to_string())));
     }
     if name_lower.contains("ticket") || name_lower.contains("boarding") || name_lower.contains("flight") ||
        name_lower.contains("itinerary") || name_lower.contains("boleto") {
-        return Some(("Archive".to_string(), Some("Bookings".to_string())));
+        return Some(("Travel".to_string(), Some("Flights".to_string())));
     }
     if name_lower.contains("hotel") || name_lower.contains("reservation") || name_lower.contains("booking") {
-        return Some(("Archive".to_string(), Some("Reservations".to_string())));
+        return Some(("Travel".to_string(), Some("Hotels".to_string())));
     }
 
     // Home/Property → Home
@@ -937,7 +937,7 @@ fn categorize_by_filename(name_lower: &str) -> Option<(String, Option<String>)> 
 
 /// Get category and subcategory based on file extension (fallback when no AI classification)
 /// Extension-only = low confidence, so most types route to "Review" for user decision.
-/// Uses canonical 11-category enum: Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Archive, Review
+/// Uses canonical 12-category enum: Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Travel, Archive, Review
 fn categorize_by_extension(extension: Option<&str>, filename: &str) -> (String, Option<String>) {
     let ext = extension.map(|e| e.to_lowercase()).unwrap_or_default();
     let name_lower = filename.to_lowercase();

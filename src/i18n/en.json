@@ -144,7 +144,7 @@
       "options": {
         "flat": {
           "label": "Keep it simple",
-          "desc": "Mostly show just the top folders (11 main categories)"
+          "desc": "Mostly show just the top folders (12 main categories)"
         },
         "moderate": {
           "label": "Some subfolders",
@@ -206,10 +206,10 @@
   },
   "organizationStyles": {
     "title": "How would you like to organize?",
-    "subtitle": "Each style creates a different folder structure. All use numbered folders (01-11) for consistent sorting.",
+    "subtitle": "Each style creates a different folder structure. All use numbered folders (01-12) for consistent sorting.",
     "simple": {
       "name": "Life Areas",
-      "description": "Groups files into 11 smart folders: Work, Money, Home, Health, Legal, School, Family & Friends, Clients, Projects, Archive, and Review.",
+      "description": "Groups files into 12 smart folders: Work, Money, Home, Health, Legal, School, Family & Friends, Clients, Projects, Travel, Archive, and Review.",
       "bestFor": "Personal & family files"
     },
     "timeline": {
@@ -497,6 +497,10 @@
         "purpose": "Project-specific documents and files.",
         "signals": "Project plans, deliverables, meeting notes, resources."
       },
+      "travel": {
+        "purpose": "Travel documents and trip records.",
+        "signals": "Passports, visas, boarding passes, hotel reservations, itineraries."
+      },
       "archive": {
         "purpose": "Older files organized by year.",
         "signals": "Documents older than 3 years, historical records."
@@ -533,6 +537,7 @@
     "Family": "Family & Friends",
     "Clients": "Clients",
     "Projects": "Projects",
+    "Travel": "Travel",
     "Archive": "Archive",
     "Review": "Review"
   }

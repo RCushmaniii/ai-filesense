@@ -4,8 +4,8 @@
  * SINGLE SOURCE OF TRUTH for frontend type definitions.
  * Must match Rust definitions in src-tauri/src/category.rs
  *
- * 11-folder numbered system for consistent sort order:
- * 01 Work, 02 Money, 03 Home, ... 11 Review
+ * 12-folder numbered system for consistent sort order:
+ * 01 Work, 02 Money, 03 Home, ... 10 Travel, 11 Archive, 12 Review
  *
  * Approved folder names (English / Spanish MX):
  * 1. Work / Trabajo
@@ -17,12 +17,13 @@
  * 7. Family & Friends / Familia y Amigos
  * 8. Clients / Clientes
  * 9. Projects / Proyectos
- * 10. Archive / Archivo
- * 11. Review / Revisar
+ * 10. Travel / Viajes
+ * 11. Archive / Archivo
+ * 12. Review / Revisar
  */
 
 // ============================================
-// Category Types - 11 Numbered Smart Folders
+// Category Types - 12 Numbered Smart Folders
 // ============================================
 
 export type Category =
@@ -35,8 +36,9 @@ export type Category =
   | 'Family'     // 07 - Family & friends documents, kids' records, personal relationships
   | 'Clients'    // 08 - Client-specific documents (freelancers/SMB)
   | 'Projects'   // 09 - Active projects (AI creates subfolders by project name)
-  | 'Archive'    // 10 - Old/inactive items, historical records by year
-  | 'Review';    // 11 - Low confidence items needing user attention
+  | 'Travel'     // 10 - Passports, visas, flights, hotels, itineraries
+  | 'Archive'    // 11 - Old/inactive items, historical records by year
+  | 'Review';    // 12 - Low confidence items needing user attention
 
 // Categories in numbered order
 export const CATEGORIES: readonly Category[] = [
@@ -49,8 +51,9 @@ export const CATEGORIES: readonly Category[] = [
   'Family',     // 07
   'Clients',    // 08
   'Projects',   // 09
-  'Archive',    // 10
-  'Review',     // 11
+  'Travel',     // 10
+  'Archive',    // 11
+  'Review',     // 12
 ] as const;
 
 // Category number mapping for folder names
@@ -64,8 +67,9 @@ export const CATEGORY_NUMBERS: Record<Category, string> = {
   Family: '07',
   Clients: '08',
   Projects: '09',
-  Archive: '10',
-  Review: '11',
+  Travel: '10',
+  Archive: '11',
+  Review: '12',
 };
 
 // Get numbered folder name for disk operations
@@ -80,8 +84,9 @@ export function getCategoryFolderName(category: Category): string {
     Family: '07 Family',
     Clients: '08 Clients',
     Projects: '09 Projects',
-    Archive: '10 Archive',
-    Review: '11 Review',
+    Travel: '10 Travel',
+    Archive: '11 Archive',
+    Review: '12 Review',
   };
   return names[category];
 }
@@ -98,6 +103,7 @@ export function getCategoryDisplayName(category: Category): string {
     Family: 'Family',
     Clients: 'Clients',
     Projects: 'Projects',
+    Travel: 'Travel',
     Archive: 'Archive',
     Review: 'Review',
   };
@@ -255,6 +261,11 @@ export const CATEGORY_META: Record<Category, CategoryMeta> = {
     color: '#06B6D4',
     description: 'Active projects',
   },
+  Travel: {
+    icon: 'plane',
+    color: '#0EA5E9',
+    description: 'Passports, flights, hotels',
+  },
   Archive: {
     icon: 'archive',
     color: '#6B7280',
@@ -281,6 +292,7 @@ export const SUBCATEGORIES: Record<Category, readonly string[] | null> = {
   Family: null,   // Dynamic: family member names
   Clients: null,  // Dynamic: client names
   Projects: null, // Dynamic: project names
+  Travel: ['Flights', 'Hotels', 'Itineraries', 'Visas', 'Bookings'],
   Archive: ['2024', '2023', '2022', '2021', 'Older'],
   Review: null,   // No subfolders - needs manual sorting
 };
@@ -420,8 +432,6 @@ export function normalizeCategory(raw: string): Category {
     id: 'Legal',
     ids: 'Legal',
     identification: 'Legal',
-    passport: 'Legal',
-    passports: 'Legal',
     ssn: 'Legal',
     'social security': 'Legal',
     'birth certificate': 'Legal',
@@ -480,7 +490,27 @@ export function normalizeCategory(raw: string): Category {
     initiatives: 'Projects',
     proyectos: 'Projects',
 
-    // Archive (10) - historical, inactive, old documents
+    // Travel (10) - travel documents, trips, bookings
+    travel: 'Travel',
+    trips: 'Travel',
+    trip: 'Travel',
+    vacation: 'Travel',
+    vacations: 'Travel',
+    viajes: 'Travel',
+    viaje: 'Travel',
+    flight: 'Travel',
+    flights: 'Travel',
+    hotel: 'Travel',
+    hotels: 'Travel',
+    itinerary: 'Travel',
+    boarding: 'Travel',
+    vuelo: 'Travel',
+    vuelos: 'Travel',
+    passport: 'Travel',
+    passports: 'Travel',
+    pasaporte: 'Travel',
+
+    // Archive (11) - historical, inactive, old documents
     archived: 'Archive',
     old: 'Archive',
     historical: 'Archive',
@@ -489,15 +519,8 @@ export function normalizeCategory(raw: string): Category {
     completed: 'Archive',
     done: 'Archive',
     archivo: 'Archive',
-    travel: 'Archive',
-    trips: 'Archive',
-    trip: 'Archive',
-    vacation: 'Archive',
-    vacations: 'Archive',
-    viajes: 'Archive',
-    viaje: 'Archive',
 
-    // Review (11) - uncategorized, needs manual sorting
+    // Review (12) - uncategorized, needs manual sorting
     inbox: 'Review',
     unsorted: 'Review',
     unknown: 'Review',

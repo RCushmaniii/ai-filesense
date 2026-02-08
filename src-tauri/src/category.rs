@@ -1,15 +1,15 @@
 //! Category vocabulary and normalization
 //!
 //! SINGLE SOURCE OF TRUTH for folder categories.
-//! 11-folder numbered system for consistent sort order across file systems.
+//! 12-folder numbered system for consistent sort order across file systems.
 //!
 //! Numbers ensure folders always appear in the same order:
-//! 01 Work, 02 Money, 03 Home, ... 11 Review
+//! 01 Work, 02 Money, 03 Home, ... 10 Travel, 11 Archive, 12 Review
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// Top-level folder categories - 11 numbered smart folders (approved vocabulary)
+/// Top-level folder categories - 12 numbered smart folders (approved vocabulary)
 ///
 /// English / Spanish (MX):
 /// 1. Work / Trabajo
@@ -21,8 +21,9 @@ use std::fmt;
 /// 7. Family & Friends / Familia y Amigos
 /// 8. Clients / Clientes
 /// 9. Projects / Proyectos
-/// 10. Archive / Archivo
-/// 11. Review / Revisar
+/// 10. Travel / Viajes
+/// 11. Archive / Archivo
+/// 12. Review / Revisar
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "PascalCase")]
 pub enum Category {
@@ -35,8 +36,9 @@ pub enum Category {
     Family,     // 07 - Family & friends documents, kids' records, personal relationships
     Clients,    // 08 - Client-specific documents (freelancers/SMB)
     Projects,   // 09 - Active projects (AI creates subfolders by project name)
-    Archive,    // 10 - Old/inactive items, historical records by year
-    Review,     // 11 - Low confidence items needing user attention
+    Travel,     // 10 - Passports, visas, flights, hotels, itineraries
+    Archive,    // 11 - Old/inactive items, historical records by year
+    Review,     // 12 - Low confidence items needing user attention
 }
 
 impl Category {
@@ -51,8 +53,9 @@ impl Category {
         Category::Family,   // 07
         Category::Clients,  // 08
         Category::Projects, // 09
-        Category::Archive,  // 10
-        Category::Review,   // 11
+        Category::Travel,   // 10
+        Category::Archive,  // 11
+        Category::Review,   // 12
     ];
 
     /// Returns the category name for display (without number prefix)
@@ -67,13 +70,14 @@ impl Category {
             Category::Family => "Family",
             Category::Clients => "Clients",
             Category::Projects => "Projects",
+            Category::Travel => "Travel",
             Category::Archive => "Archive",
             Category::Review => "Review",
         }
     }
 
     /// Returns the numbered folder name for disk operations
-    /// e.g., "01 Work", "02 Money", "11 Review"
+    /// e.g., "01 Work", "02 Money", "12 Review"
     pub fn folder_name(&self) -> &'static str {
         match self {
             Category::Work => "01 Work",
@@ -85,8 +89,9 @@ impl Category {
             Category::Family => "07 Family",
             Category::Clients => "08 Clients",
             Category::Projects => "09 Projects",
-            Category::Archive => "10 Archive",
-            Category::Review => "11 Review",
+            Category::Travel => "10 Travel",
+            Category::Archive => "11 Archive",
+            Category::Review => "12 Review",
         }
     }
 
@@ -102,8 +107,9 @@ impl Category {
             Category::Family => 7,
             Category::Clients => 8,
             Category::Projects => 9,
-            Category::Archive => 10,
-            Category::Review => 11,
+            Category::Travel => 10,
+            Category::Archive => 11,
+            Category::Review => 12,
         }
     }
 
@@ -136,7 +142,7 @@ impl Default for Category {
 /// Handles synonyms, misspellings, and AI output variations.
 /// Returns Review for unrecognized inputs.
 ///
-/// Approved 11 folders: Work, Money, Home, Health, Legal, School, Family & Friends, Clients, Projects, Archive, Review
+/// Approved 12 folders: Work, Money, Home, Health, Legal, School, Family & Friends, Clients, Projects, Travel, Archive, Review
 pub fn normalize_folder(raw: &str) -> Category {
     let normalized = raw.to_lowercase().trim().to_string();
 
@@ -171,7 +177,7 @@ pub fn normalize_folder(raw: &str) -> Category {
         "legal" | "contracts" | "contract" | "agreements" | "agreement"
         | "law" | "attorney" | "lawyer" | "court" | "license" | "licenses"
         | "wills" | "will" | "power of attorney" | "poa"
-        | "identity" | "id" | "ids" | "identification" | "passport" | "passports"
+        | "identity" | "id" | "ids" | "identification"
         | "ssn" | "social security" | "birth certificate" | "citizenship"
         | "identidad" | "identificacion" => Category::Legal,
 
@@ -194,12 +200,17 @@ pub fn normalize_folder(raw: &str) -> Category {
         "projects" | "project" | "engagements" | "engagement" | "cases" | "case"
         | "initiatives" | "proyectos" => Category::Projects,
 
-        // Archive (10) - historical, inactive, old documents
-        "archive" | "archived" | "old" | "historical" | "past" | "inactive"
-        | "completed" | "done" | "archivo"
-        | "travel" | "trips" | "trip" | "vacation" | "vacations" | "viajes" | "viaje" => Category::Archive,
+        // Travel (10) - travel documents, trips, bookings
+        "travel" | "trips" | "trip" | "vacation" | "vacations"
+        | "viajes" | "viaje" | "flight" | "flights" | "hotel" | "hotels"
+        | "itinerary" | "boarding" | "vuelo" | "vuelos"
+        | "passport" | "passports" | "pasaporte" => Category::Travel,
 
-        // Review (11) - uncategorized, needs manual sorting
+        // Archive (11) - historical, inactive, old documents
+        "archive" | "archived" | "old" | "historical" | "past" | "inactive"
+        | "completed" | "done" | "archivo" => Category::Archive,
+
+        // Review (12) - uncategorized, needs manual sorting
         "review" | "inbox" | "unsorted" | "unknown" | "other" | "misc"
         | "miscellaneous" | "revisar" | "pending" => Category::Review,
 
@@ -220,6 +231,7 @@ pub fn suggested_subfolders(category: &Category) -> &'static [&'static str] {
         Category::Family => &[], // Dynamic: family member names
         Category::Clients => &[], // Dynamic: client names
         Category::Projects => &[], // Dynamic: project names
+        Category::Travel => &["Flights", "Hotels", "Itineraries", "Visas", "Bookings"],
         Category::Archive => &["2024", "2023", "2022", "2021", "Older"],
         Category::Review => &[], // No subfolders - needs manual sorting
     }
@@ -240,6 +252,7 @@ mod tests {
         assert_eq!(normalize_folder("Family"), Category::Family);
         assert_eq!(normalize_folder("Clients"), Category::Clients);
         assert_eq!(normalize_folder("Projects"), Category::Projects);
+        assert_eq!(normalize_folder("Travel"), Category::Travel);
         assert_eq!(normalize_folder("Archive"), Category::Archive);
         assert_eq!(normalize_folder("Review"), Category::Review);
     }
@@ -276,8 +289,9 @@ mod tests {
     fn test_numbered_folder_names() {
         assert_eq!(Category::Work.folder_name(), "01 Work");
         assert_eq!(Category::Money.folder_name(), "02 Money");
-        assert_eq!(Category::Archive.folder_name(), "10 Archive");
-        assert_eq!(Category::Review.folder_name(), "11 Review");
+        assert_eq!(Category::Travel.folder_name(), "10 Travel");
+        assert_eq!(Category::Archive.folder_name(), "11 Archive");
+        assert_eq!(Category::Review.folder_name(), "12 Review");
     }
 
     #[test]
@@ -285,7 +299,8 @@ mod tests {
         // Should normalize folder names even with number prefix
         assert_eq!(normalize_folder("01 Work"), Category::Work);
         assert_eq!(normalize_folder("02 Money"), Category::Money);
-        assert_eq!(normalize_folder("11 Review"), Category::Review);
+        assert_eq!(normalize_folder("10 Travel"), Category::Travel);
+        assert_eq!(normalize_folder("12 Review"), Category::Review);
     }
 
     #[test]
@@ -318,7 +333,7 @@ mod tests {
 
     #[test]
     fn test_all_categories_represented() {
-        assert_eq!(Category::ALL.len(), 11);
+        assert_eq!(Category::ALL.len(), 12);
     }
 
     #[test]
@@ -339,8 +354,9 @@ mod tests {
         assert_eq!(Category::Family.number(), 7);
         assert_eq!(Category::Clients.number(), 8);
         assert_eq!(Category::Projects.number(), 9);
-        assert_eq!(Category::Archive.number(), 10);
-        assert_eq!(Category::Review.number(), 11);
+        assert_eq!(Category::Travel.number(), 10);
+        assert_eq!(Category::Archive.number(), 11);
+        assert_eq!(Category::Review.number(), 12);
     }
 
     #[test]
@@ -352,6 +368,19 @@ mod tests {
         assert_eq!(normalize_folder("Learning"), Category::School); // Learning → School
         assert_eq!(normalize_folder("Career"), Category::Work);     // Career → Work
         assert_eq!(normalize_folder("Business"), Category::Clients); // Business → Clients
-        assert_eq!(normalize_folder("Travel"), Category::Archive);  // Travel → Archive
+        assert_eq!(normalize_folder("Travel"), Category::Travel);   // Travel → Travel (now its own category)
+    }
+
+    #[test]
+    fn test_travel_synonyms() {
+        assert_eq!(normalize_folder("travel"), Category::Travel);
+        assert_eq!(normalize_folder("trips"), Category::Travel);
+        assert_eq!(normalize_folder("vacation"), Category::Travel);
+        assert_eq!(normalize_folder("flight"), Category::Travel);
+        assert_eq!(normalize_folder("hotel"), Category::Travel);
+        assert_eq!(normalize_folder("itinerary"), Category::Travel);
+        assert_eq!(normalize_folder("passport"), Category::Travel);
+        assert_eq!(normalize_folder("viajes"), Category::Travel);
+        assert_eq!(normalize_folder("vuelo"), Category::Travel);
     }
 }

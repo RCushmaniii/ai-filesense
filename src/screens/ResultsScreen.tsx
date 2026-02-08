@@ -2,8 +2,8 @@
  * Results Preview Screen (Screen 5 of 10)
  *
  * Purpose: High-level understanding, no action required
- * - Display 11 guardrail folders with file counts
- * - Prefixed with numbers (00-10)
+ * - Display 12 guardrail folders with file counts
+ * - Prefixed with numbers (00-11)
  * - Ordered numerically
  * - READ-ONLY - no file-level actions
  * - Clear statement: "No files have been moved yet."
@@ -33,6 +33,7 @@ import {
   Users,
   Building,
   FolderKanban,
+  Plane,
   Archive,
   AlertCircle,
 } from 'lucide-react';
@@ -54,6 +55,7 @@ const CATEGORY_ICONS: Record<Category, React.ComponentType<{ className?: string 
   Family: Users,
   Clients: Building,
   Projects: FolderKanban,
+  Travel: Plane,
   Archive: Archive,
   Review: AlertCircle,
 };
@@ -70,7 +72,8 @@ const NUMBERED_FOLDERS: { category: Category; number: string }[] = [
   { category: 'Family', number: '07' },
   { category: 'Clients', number: '08' },
   { category: 'Projects', number: '09' },
-  { category: 'Archive', number: '10' },
+  { category: 'Travel', number: '10' },
+  { category: 'Archive', number: '11' },
 ];
 
 export function ResultsScreen() {
@@ -167,7 +170,7 @@ export function ResultsScreen() {
           </CardContent>
         </Card>
 
-        {/* 11 Guardrail Folders - READ-ONLY */}
+        {/* 12 Guardrail Folders - READ-ONLY */}
         <div className="space-y-3">
           <h2 className="text-base font-medium text-muted-foreground">
             {t('results.foldersHeading')}

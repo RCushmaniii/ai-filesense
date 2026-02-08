@@ -3,7 +3,8 @@
     "name": "AI FileSense",
     "tagline": "Organización de archivos con IA",
     "footerPrivacy": "Tus archivos permanecen locales — solo se procesan metadatos",
-    "startOver": "Iniciar nueva organización"
+    "startOver": "Iniciar nueva organización",
+    "dashboard": "Panel"
   },
   "home": {
     "welcome": "¿Qué te gustaría hacer?",
@@ -180,6 +181,8 @@
     "scanNow": "Escanear Ahora"
   },
   "results": {
+    "safetyNote": "No se han movido archivos todavía. Esta es una vista previa de cómo se organizarán tus archivos.",
+    "foldersHeading": "Tus archivos se organizarán en estas carpetas:",
     "title": "Esto es lo que encontramos",
     "ready": "Listo para organizar",
     "documentsFound": "Encontramos {count} archivos para organizar",
@@ -276,6 +279,7 @@
     "save": "Guardar",
     "saved": "Configuración guardada",
     "testConnection": "Probar conexión",
+    "testing": "Probando...",
     "connectionSuccess": "Conexión exitosa",
     "connectionFailed": "Conexión fallida"
   },
@@ -390,7 +394,13 @@
     "testModeActive": "Modo de prueba activo - ningún archivo será movido realmente",
     "noFilesDeleted": "Sin eliminaciones",
     "undoAvailable": "Deshacer disponible",
-    "filesStayLocal": "Archivos locales"
+    "filesStayLocal": "Archivos locales",
+    "of": "de",
+    "filesOrganized": "archivos organizados",
+    "restoringFiles": "Restaurando archivos...",
+    "errorTitleNonRecoverable": "Tuvimos que detenernos para mantener tus archivos seguros",
+    "errorMessageNonRecoverable": "No se finalizaron cambios. Puedes intentar de nuevo después de resolver el problema.",
+    "returnToDashboard": "Volver al panel"
   },
   "success": {
     "title": "Tus archivos están organizados",

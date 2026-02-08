@@ -17,7 +17,7 @@ import {
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { CrashRecoveryDialog } from './components/CrashRecoveryDialog';
 import { useTranslation } from './i18n';
-import { Settings } from 'lucide-react';
+import { Settings, LayoutDashboard } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 
 interface SessionSummary {
@@ -161,6 +161,18 @@ function AppContent() {
               <span className="font-semibold">{t('app.name')}</span>
             </button>
             <div className="flex items-center gap-2">
+              <button
+                className={`p-2 transition-colors ${
+                  state.state === 'DASHBOARD'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-label={t('app.dashboard')}
+                onClick={() => dispatch({ type: 'GO_TO_DASHBOARD' })}
+                title={t('app.dashboard')}
+              >
+                <LayoutDashboard className="w-5 h-5" />
+              </button>
               <LanguageSwitcher minimal />
               <button
                 className="p-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -183,7 +195,7 @@ function AppContent() {
       {state.hasCompletedWelcome && (
         <footer className="border-t py-3">
           <div className="container px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>© 2025 AI FileSense. {t('footer.allRightsReserved')}</span>
+            <span>© {new Date().getFullYear()} AI FileSense. {t('footer.allRightsReserved')}</span>
             <div className="flex items-center gap-4">
               <a
                 href="https://ai-filesense-website.vercel.app/privacy"

@@ -162,7 +162,7 @@ export function ResultsScreen() {
           <CardContent className="p-4 flex gap-3">
             <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              No files have been moved yet. This is a preview of how your files will be organized.
+              {t('results.safetyNote')}
             </p>
           </CardContent>
         </Card>
@@ -170,7 +170,7 @@ export function ResultsScreen() {
         {/* 11 Guardrail Folders - READ-ONLY */}
         <div className="space-y-3">
           <h2 className="text-base font-medium text-muted-foreground">
-            Your files will be organized into these folders:
+            {t('results.foldersHeading')}
           </h2>
 
           <div className="space-y-1">

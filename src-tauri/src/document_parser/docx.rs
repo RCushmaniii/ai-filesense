@@ -147,9 +147,9 @@ fn extract_document_text(archive: &mut ZipArchive<File>, max_chars: usize) -> Re
                     let text = e.unescape().unwrap_or_default();
                     content.push_str(&text);
 
-                    // Check if we've reached max_chars
-                    if content.len() >= max_chars {
-                        content.truncate(max_chars);
+                    // Check if we've reached max_chars (char-safe for multi-byte UTF-8)
+                    if content.chars().count() >= max_chars {
+                        content = content.chars().take(max_chars).collect::<String>();
                         break;
                     }
                 }

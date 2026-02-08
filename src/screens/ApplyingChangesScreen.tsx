@@ -177,12 +177,8 @@ export function ApplyingChangesScreen() {
         if (isNonRecoverable) {
           // Non-recoverable: trigger rollback
           setError({
-            title: isSpanish
-              ? 'Tuvimos que detenernos para mantener tus archivos seguros'
-              : 'We had to stop to keep your files safe',
-            message: isSpanish
-              ? 'No se finalizaron cambios. Puedes intentar de nuevo después de resolver el problema.'
-              : 'No changes were finalized. You can try again after resolving the issue.',
+            title: t('applyingChanges.errorTitleNonRecoverable'),
+            message: t('applyingChanges.errorMessageNonRecoverable'),
             isRecoverable: false,
           });
 
@@ -213,7 +209,7 @@ export function ApplyingChangesScreen() {
     };
 
     executePlan();
-  }, [plan, state.testMode, dispatch, isSpanish, progress.filesOrganized, progress.foldersCreated]);
+  }, [plan, state.testMode, dispatch, progress.filesOrganized, progress.foldersCreated]);
 
   const handleReturnToDashboard = () => {
     dispatch({ type: 'GO_TO_DASHBOARD' });
@@ -242,7 +238,7 @@ export function ApplyingChangesScreen() {
             </p>
             {isRollingBack && (
               <p className="text-sm text-muted-foreground">
-                {isSpanish ? 'Restaurando archivos...' : 'Restoring files...'}
+                {t('applyingChanges.restoringFiles')}
               </p>
             )}
           </div>
@@ -250,7 +246,7 @@ export function ApplyingChangesScreen() {
           {/* Return to dashboard */}
           {!isRollingBack && (
             <Button size="lg" onClick={handleReturnToDashboard}>
-              {isSpanish ? 'Volver al panel' : 'Return to Dashboard'}
+              {t('applyingChanges.returnToDashboard')}
             </Button>
           )}
         </div>
@@ -288,13 +284,11 @@ export function ApplyingChangesScreen() {
           <p className="text-center text-base">
             <span className="font-medium">{progress.current.toLocaleString()}</span>
             <span className="text-muted-foreground">
-              {' '}
-              {isSpanish ? 'de' : 'of'}{' '}
+              {' '}{t('applyingChanges.of')}{' '}
             </span>
             <span className="font-medium">{progress.total.toLocaleString()}</span>
             <span className="text-muted-foreground">
-              {' '}
-              {isSpanish ? 'archivos organizados' : 'files organized'}
+              {' '}{t('applyingChanges.filesOrganized')}
             </span>
           </p>
         </div>
@@ -311,19 +305,19 @@ export function ApplyingChangesScreen() {
           <div className="flex items-center gap-2 text-[15px]">
             <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
             <span className="font-medium">
-              {isSpanish ? 'Sin eliminaciones' : 'No files deleted'}
+              {t('applyingChanges.noFilesDeleted')}
             </span>
           </div>
           <div className="flex items-center gap-2 text-[15px]">
             <RefreshCw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="font-medium">
-              {isSpanish ? 'Deshacer disponible' : 'Undo available'}
+              {t('applyingChanges.undoAvailable')}
             </span>
           </div>
           <div className="flex items-center gap-2 text-[15px]">
             <Lock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             <span className="font-medium">
-              {isSpanish ? 'Archivos locales' : 'Files stay local'}
+              {t('applyingChanges.filesStayLocal')}
             </span>
           </div>
         </div>

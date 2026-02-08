@@ -137,7 +137,7 @@ fn extract_slides_text(archive: &mut ZipArchive<File>, max_chars: usize) -> Resu
     let mut slide_num = 1;
 
     for slide_name in slide_names {
-        if content.len() >= max_chars {
+        if content.chars().count() >= max_chars {
             break;
         }
 
@@ -156,9 +156,9 @@ fn extract_slides_text(archive: &mut ZipArchive<File>, max_chars: usize) -> Resu
         slide_num += 1;
     }
 
-    // Truncate if needed
-    if content.len() > max_chars {
-        content.truncate(max_chars);
+    // Truncate if needed (char-safe for multi-byte UTF-8)
+    if content.chars().count() > max_chars {
+        content = content.chars().take(max_chars).collect::<String>();
     }
 
     Ok(content)

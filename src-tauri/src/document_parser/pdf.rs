@@ -12,9 +12,9 @@ pub fn extract_pdf(path: &Path, max_chars: usize) -> Result<ParsedDocument, Pars
     let content = pdf_extract::extract_text(path)
         .map_err(|e| ParseError::ParseError(format!("Failed to extract PDF text: {}", e)))?;
 
-    // Truncate to max_chars
-    let content = if content.len() > max_chars {
-        content[..max_chars].to_string()
+    // Truncate to max_chars (char-safe for multi-byte UTF-8)
+    let content = if content.chars().count() > max_chars {
+        content.chars().take(max_chars).collect::<String>()
     } else {
         content
     };

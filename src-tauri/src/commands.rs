@@ -111,7 +111,7 @@ pub async fn test_api_connection(api_key: String, model: Option<String>) -> Resu
         base_url: "https://api.anthropic.com/v1".to_string(),
     };
 
-    let client = AIClient::new(config);
+    let client = AIClient::new(config)?;
 
     // Try a minimal API call to verify the key works
     match client.test_connection().await {
@@ -241,7 +241,7 @@ pub async fn classify_files(
 
     // Load API key from environment variable (developer's key for freemium)
     let config = AIConfig::from_env()?;
-    let client = AIClient::new(config);
+    let client = AIClient::new(config)?;
 
     // Step 1: Get files from database (sync block, then drop connection)
     let (files, total, classified) = {
@@ -796,106 +796,107 @@ pub fn count_duplicates(db_path: State<'_, DbPath>) -> Result<usize, String> {
 }
 
 /// Smart categorization based on filename patterns
-/// Returns (category, subcategory) based on keywords in the filename
+/// Returns (category, subcategory) using canonical 11-category enum:
+/// Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Archive, Review
 fn categorize_by_filename(name_lower: &str) -> Option<(String, Option<String>)> {
-    // Financial documents
+    // Financial documents → Money
     if name_lower.contains("invoice") || name_lower.contains("receipt") || name_lower.contains("bill") ||
        name_lower.contains("payment") || name_lower.contains("orden") || name_lower.contains("factura") {
-        return Some(("Finances".to_string(), Some("Receipts & Invoices".to_string())));
+        return Some(("Money".to_string(), Some("Receipts".to_string())));
     }
     if name_lower.contains("tax") || name_lower.contains("w2") || name_lower.contains("1099") ||
        name_lower.contains("w-2") || name_lower.contains("1040") || name_lower.contains("impuesto") {
-        return Some(("Finances".to_string(), Some("Tax Documents".to_string())));
+        return Some(("Money".to_string(), Some("Taxes".to_string())));
     }
     if name_lower.contains("bank") || name_lower.contains("statement") || name_lower.contains("account") {
-        return Some(("Finances".to_string(), Some("Bank Statements".to_string())));
+        return Some(("Money".to_string(), Some("Banking".to_string())));
     }
     if name_lower.contains("budget") || name_lower.contains("expense") || name_lower.contains("spending") {
-        return Some(("Finances".to_string(), Some("Budgets".to_string())));
+        return Some(("Money".to_string(), Some("Bills".to_string())));
     }
 
-    // Legal documents
+    // Legal documents → Legal
     if name_lower.contains("contract") || name_lower.contains("agreement") || name_lower.contains("contrato") {
         return Some(("Legal".to_string(), Some("Contracts".to_string())));
     }
     if name_lower.contains("lease") || name_lower.contains("rental") || name_lower.contains("tenant") {
-        return Some(("Legal".to_string(), Some("Leases".to_string())));
+        return Some(("Legal".to_string(), Some("Contracts".to_string())));
     }
     if name_lower.contains("warranty") || name_lower.contains("guarantee") {
-        return Some(("Legal".to_string(), Some("Warranties".to_string())));
+        return Some(("Legal".to_string(), Some("Contracts".to_string())));
     }
     if name_lower.contains("license") || name_lower.contains("permit") || name_lower.contains("licencia") {
-        return Some(("Legal".to_string(), Some("Licenses & Permits".to_string())));
+        return Some(("Legal".to_string(), Some("Licenses".to_string())));
     }
 
-    // Medical/Health
+    // Medical/Health → Health
     if name_lower.contains("medical") || name_lower.contains("health") || name_lower.contains("doctor") ||
        name_lower.contains("hospital") || name_lower.contains("clinic") || name_lower.contains("medico") {
-        return Some(("Medical".to_string(), Some("Records".to_string())));
+        return Some(("Health".to_string(), Some("Records".to_string())));
     }
     if name_lower.contains("prescription") || name_lower.contains("rx") || name_lower.contains("medication") ||
        name_lower.contains("receta") {
-        return Some(("Medical".to_string(), Some("Prescriptions".to_string())));
+        return Some(("Health".to_string(), Some("Prescriptions".to_string())));
     }
     if name_lower.contains("insurance") && (name_lower.contains("health") || name_lower.contains("medical")) {
-        return Some(("Medical".to_string(), Some("Insurance".to_string())));
+        return Some(("Health".to_string(), Some("Insurance".to_string())));
     }
     if name_lower.contains("lab") || name_lower.contains("test result") || name_lower.contains("blood") {
-        return Some(("Medical".to_string(), Some("Lab Results".to_string())));
+        return Some(("Health".to_string(), Some("LabResults".to_string())));
     }
 
-    // Work/Career
+    // Work/Career → Work
     if name_lower.contains("resume") || name_lower.contains("cv") || name_lower.contains("curriculum") {
-        return Some(("Work".to_string(), Some("Career".to_string())));
+        return Some(("Work".to_string(), Some("Resumes".to_string())));
     }
     if name_lower.contains("offer letter") || name_lower.contains("employment") || name_lower.contains("job offer") {
-        return Some(("Work".to_string(), Some("Employment".to_string())));
+        return Some(("Work".to_string(), Some("Benefits".to_string())));
     }
     if name_lower.contains("payslip") || name_lower.contains("paystub") || name_lower.contains("salary") ||
        name_lower.contains("nomina") {
-        return Some(("Work".to_string(), Some("Pay Stubs".to_string())));
+        return Some(("Work".to_string(), Some("Payslips".to_string())));
     }
     if name_lower.contains("performance") || name_lower.contains("review") || name_lower.contains("evaluation") {
-        return Some(("Work".to_string(), Some("Reviews".to_string())));
+        return Some(("Work".to_string(), Some("Performance".to_string())));
     }
     if name_lower.contains("training") || name_lower.contains("certificate") || name_lower.contains("certification") ||
        name_lower.contains("diploma") || name_lower.contains("certificado") {
-        return Some(("Work".to_string(), Some("Certifications".to_string())));
+        return Some(("Work".to_string(), Some("Training".to_string())));
     }
 
-    // Education
+    // Education → School
     if name_lower.contains("transcript") || name_lower.contains("grades") || name_lower.contains("gpa") {
-        return Some(("Education".to_string(), Some("Transcripts".to_string())));
+        return Some(("School".to_string(), Some("Transcripts".to_string())));
     }
     if name_lower.contains("homework") || name_lower.contains("assignment") || name_lower.contains("tarea") {
-        return Some(("Education".to_string(), Some("Assignments".to_string())));
+        return Some(("School".to_string(), Some("Courses".to_string())));
     }
     if name_lower.contains("syllabus") || name_lower.contains("course") || name_lower.contains("class") {
-        return Some(("Education".to_string(), Some("Courses".to_string())));
+        return Some(("School".to_string(), Some("Courses".to_string())));
     }
 
-    // Insurance
+    // Insurance → Money
     if name_lower.contains("insurance") || name_lower.contains("policy") || name_lower.contains("coverage") ||
        name_lower.contains("seguro") {
-        return Some(("Insurance".to_string(), Some("Policies".to_string())));
+        return Some(("Money".to_string(), Some("Insurance".to_string())));
     }
     if name_lower.contains("claim") {
-        return Some(("Insurance".to_string(), Some("Claims".to_string())));
+        return Some(("Money".to_string(), Some("Insurance".to_string())));
     }
 
-    // Travel
+    // Travel: passport/visa → Legal (IDs), tickets/hotels → Archive
     if name_lower.contains("passport") || name_lower.contains("visa") || name_lower.contains("pasaporte") {
-        return Some(("Travel".to_string(), Some("ID Documents".to_string())));
+        return Some(("Legal".to_string(), Some("IDs".to_string())));
     }
     if name_lower.contains("ticket") || name_lower.contains("boarding") || name_lower.contains("flight") ||
        name_lower.contains("itinerary") || name_lower.contains("boleto") {
-        return Some(("Travel".to_string(), Some("Bookings".to_string())));
+        return Some(("Archive".to_string(), Some("Bookings".to_string())));
     }
     if name_lower.contains("hotel") || name_lower.contains("reservation") || name_lower.contains("booking") {
-        return Some(("Travel".to_string(), Some("Reservations".to_string())));
+        return Some(("Archive".to_string(), Some("Reservations".to_string())));
     }
 
-    // Home/Property
+    // Home/Property → Home
     if name_lower.contains("mortgage") || name_lower.contains("deed") || name_lower.contains("title") ||
        name_lower.contains("hipoteca") {
         return Some(("Home".to_string(), Some("Property".to_string())));
@@ -908,33 +909,35 @@ fn categorize_by_filename(name_lower: &str) -> Option<(String, Option<String>)> 
         return Some(("Home".to_string(), Some("Maintenance".to_string())));
     }
 
-    // Vehicle/Auto
+    // Vehicle/Auto → Home (subcategory Vehicle)
     if name_lower.contains("car") || name_lower.contains("vehicle") || name_lower.contains("auto") ||
        name_lower.contains("dmv") || name_lower.contains("registration") || name_lower.contains("vehiculo") {
-        return Some(("Vehicle".to_string(), Some("Registration".to_string())));
+        return Some(("Home".to_string(), Some("Vehicle".to_string())));
     }
 
-    // Reference materials
+    // Reference materials → Archive
     if name_lower.contains("manual") || name_lower.contains("guide") || name_lower.contains("instructions") ||
        name_lower.contains("how to") || name_lower.contains("tutorial") {
-        return Some(("Reference".to_string(), Some("Manuals".to_string())));
+        return Some(("Archive".to_string(), Some("Manuals".to_string())));
     }
     if name_lower.contains("recipe") || name_lower.contains("receta") {
-        return Some(("Reference".to_string(), Some("Recipes".to_string())));
+        return Some(("Archive".to_string(), Some("Recipes".to_string())));
     }
 
-    // Personal
+    // Personal → Family
     if name_lower.contains("letter") || name_lower.contains("carta") {
-        return Some(("Personal".to_string(), Some("Correspondence".to_string())));
+        return Some(("Family".to_string(), Some("Correspondence".to_string())));
     }
     if name_lower.contains("photo") || name_lower.contains("picture") || name_lower.contains("foto") {
-        return Some(("Personal".to_string(), Some("Photos".to_string())));
+        return Some(("Family".to_string(), Some("Photos".to_string())));
     }
 
     None
 }
 
 /// Get category and subcategory based on file extension (fallback when no AI classification)
+/// Extension-only = low confidence, so most types route to "Review" for user decision.
+/// Uses canonical 11-category enum: Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Archive, Review
 fn categorize_by_extension(extension: Option<&str>, filename: &str) -> (String, Option<String>) {
     let ext = extension.map(|e| e.to_lowercase()).unwrap_or_default();
     let name_lower = filename.to_lowercase();
@@ -945,62 +948,50 @@ fn categorize_by_extension(extension: Option<&str>, filename: &str) -> (String, 
     }
 
     // Fall back to extension-based categorization
+    // Extension-only gives low confidence, so most route to Review
     match ext.as_str() {
-        // Documents - PDFs often need more context
-        "pdf" => ("Documents".to_string(), Some("PDFs".to_string())),
-        "doc" | "docx" => ("Documents".to_string(), Some("Word Documents".to_string())),
-        "xls" | "xlsx" | "csv" => ("Documents".to_string(), Some("Spreadsheets".to_string())),
-        "ppt" | "pptx" => ("Documents".to_string(), Some("Presentations".to_string())),
-        "txt" | "rtf" => ("Documents".to_string(), Some("Text Files".to_string())),
+        // Documents → Review (need content to determine category)
+        "pdf" | "doc" | "docx" | "xls" | "xlsx" | "csv" | "ppt" | "pptx" | "txt" | "rtf" =>
+            ("Review".to_string(), None),
 
-        // Images
-        "jpg" | "jpeg" | "png" | "gif" | "bmp" | "webp" | "heic" => {
-            let name_lower = filename.to_lowercase();
-            if name_lower.contains("screenshot") {
-                ("Images".to_string(), Some("Screenshots".to_string()))
-            } else if name_lower.contains("scan") {
-                ("Documents".to_string(), Some("Scanned".to_string()))
-            } else {
-                ("Images".to_string(), Some("Photos".to_string()))
-            }
-        }
-        "svg" | "ai" | "eps" => ("Images".to_string(), Some("Graphics".to_string())),
-        "psd" => ("Images".to_string(), Some("Photoshop".to_string())),
-        "raw" | "cr2" | "nef" | "arw" => ("Images".to_string(), Some("RAW Photos".to_string())),
+        // Images → Review (could be personal, work, etc.)
+        "jpg" | "jpeg" | "png" | "gif" | "bmp" | "webp" | "heic" =>
+            ("Review".to_string(), None),
+        "svg" | "ai" | "eps" | "psd" | "raw" | "cr2" | "nef" | "arw" =>
+            ("Review".to_string(), None),
 
-        // Audio
-        "mp3" | "wav" | "flac" | "aac" | "m4a" | "ogg" | "wma" => ("Media".to_string(), Some("Audio".to_string())),
+        // Audio/Video → Review
+        "mp3" | "wav" | "flac" | "aac" | "m4a" | "ogg" | "wma" =>
+            ("Review".to_string(), None),
+        "mp4" | "avi" | "mkv" | "mov" | "wmv" | "flv" | "webm" =>
+            ("Review".to_string(), None),
 
-        // Video
-        "mp4" | "avi" | "mkv" | "mov" | "wmv" | "flv" | "webm" => ("Media".to_string(), Some("Video".to_string())),
+        // Archives → Review
+        "zip" | "rar" | "7z" | "tar" | "gz" =>
+            ("Review".to_string(), None),
 
-        // Archives
-        "zip" | "rar" | "7z" | "tar" | "gz" => ("Archives".to_string(), None),
-
-        // Code/Development
+        // Code/Development → Projects
         "js" | "ts" | "jsx" | "tsx" | "py" | "java" | "cpp" | "c" | "h" | "rs" | "go" | "rb" | "php" | "swift" | "kt" =>
-            ("Development".to_string(), Some("Source Code".to_string())),
-        "html" | "css" | "scss" | "sass" | "less" => ("Development".to_string(), Some("Web".to_string())),
-        "json" | "xml" | "yaml" | "yml" | "toml" => ("Development".to_string(), Some("Config".to_string())),
-        "sql" => ("Development".to_string(), Some("Database".to_string())),
-        "md" | "markdown" => ("Development".to_string(), Some("Documentation".to_string())),
+            ("Projects".to_string(), Some("Source Code".to_string())),
+        "html" | "css" | "scss" | "sass" | "less" => ("Projects".to_string(), Some("Web".to_string())),
+        "json" | "xml" | "yaml" | "yml" | "toml" => ("Projects".to_string(), Some("Config".to_string())),
+        "sql" => ("Projects".to_string(), Some("Database".to_string())),
+        "md" | "markdown" => ("Projects".to_string(), Some("Documentation".to_string())),
 
-        // Executables/Installers
-        "exe" | "msi" | "dmg" | "app" => ("Software".to_string(), Some("Installers".to_string())),
-        "dll" | "sys" | "so" => ("Software".to_string(), Some("System".to_string())),
+        // Executables/Installers → Review
+        "exe" | "msi" | "dmg" | "app" => ("Review".to_string(), None),
+        "dll" | "sys" | "so" => ("Review".to_string(), None),
 
-        // Ebooks
-        "epub" | "mobi" | "azw" | "azw3" => ("Books".to_string(), Some("Ebooks".to_string())),
+        // Ebooks → Archive
+        "epub" | "mobi" | "azw" | "azw3" => ("Archive".to_string(), Some("Ebooks".to_string())),
 
-        // Fonts
-        "ttf" | "otf" | "woff" | "woff2" => ("Design".to_string(), Some("Fonts".to_string())),
+        // Fonts/3D/CAD → Projects
+        "ttf" | "otf" | "woff" | "woff2" => ("Projects".to_string(), Some("Fonts".to_string())),
+        "obj" | "stl" | "fbx" | "blend" => ("Projects".to_string(), Some("3D Models".to_string())),
+        "dwg" | "dxf" => ("Projects".to_string(), Some("CAD".to_string())),
 
-        // 3D/CAD
-        "obj" | "stl" | "fbx" | "blend" => ("Design".to_string(), Some("3D Models".to_string())),
-        "dwg" | "dxf" => ("Design".to_string(), Some("CAD".to_string())),
-
-        // Default
-        _ => ("Other".to_string(), None),
+        // Default → Review
+        _ => ("Review".to_string(), None),
     }
 }
 
@@ -2161,7 +2152,7 @@ pub async fn get_clarification_questions(
     // Step 3: Call AI to generate questions
     let config = AIConfig::from_env()?;
 
-    let client = AIClient::new(config);
+    let client = AIClient::new(config)?;
 
     // Convert personalization input to AI format
     let ai_personalization = AIPersonalizationAnswers {

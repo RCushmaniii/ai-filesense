@@ -258,7 +258,7 @@ export function FolderSelectionScreen() {
     dispatch({ type: 'SET_SELECTED_EXTENSIONS', extensions });
 
     // DEV ONLY: Skip scanning and use previous scan from database
-    if (usePreviousScan && previousScanStatus && previousScanStatus.total_files > 0) {
+    if (import.meta.env.DEV && usePreviousScan && previousScanStatus && previousScanStatus.total_files > 0) {
       // Set scan progress from database
       dispatch({
         type: 'UPDATE_SCAN_PROGRESS',
@@ -408,7 +408,7 @@ export function FolderSelectionScreen() {
         </div>
 
         {/* DEV ONLY: Use previous scan checkbox */}
-        {previousScanStatus && previousScanStatus.total_files > 0 && (
+        {import.meta.env.DEV && previousScanStatus && previousScanStatus.total_files > 0 && (
           <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
             <CardContent className="p-4">
               <label className="flex items-start gap-3 cursor-pointer">

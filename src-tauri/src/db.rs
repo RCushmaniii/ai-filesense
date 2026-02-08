@@ -15,6 +15,7 @@ pub fn open_connection(path: &PathBuf) -> Result<Connection> {
     let conn = Connection::open(path)?;
     // Wait up to 5 seconds if database is locked
     conn.execute_batch("PRAGMA busy_timeout = 5000;")?;
+    conn.execute_batch("PRAGMA foreign_keys = ON;")?;
     Ok(conn)
 }
 
@@ -24,6 +25,7 @@ pub fn init_database(path: &PathBuf) -> Result<()> {
 
     // Set pragmas for safety and performance
     conn.execute_batch("PRAGMA busy_timeout = 5000;")?;  // Wait 5s if locked
+    conn.execute_batch("PRAGMA foreign_keys = ON;")?;    // Enforce FK constraints
     conn.execute_batch("PRAGMA journal_mode = WAL;")?;   // Write-Ahead Logging for concurrency
 
     // Files table - core file index

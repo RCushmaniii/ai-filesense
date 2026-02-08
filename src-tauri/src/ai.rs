@@ -3,6 +3,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
+use std::time::Duration;
 
 /// AI provider configuration
 #[derive(Debug, Clone)]
@@ -21,7 +22,7 @@ struct SavedSettings {
 }
 
 impl AIConfig {
-    /// Create config from settings file, environment variables, or compile-time embedded key
+    /// Create config from settings file or environment variables
     pub fn from_env() -> Result<Self, String> {
         // Try to read from settings file first (user-configured)
         let settings_api_key = Self::read_from_settings();
@@ -29,12 +30,9 @@ impl AIConfig {
         // Try sources in order:
         // 1. User settings (highest priority - allows override)
         // 2. Runtime environment variables
-        // 3. Compile-time embedded key (freemium model - developer's key)
         let api_key = settings_api_key
             .or_else(|| env::var("ANTHROPIC_SECRET_KEY").ok())
             .or_else(|| env::var("ANTHROPIC_API_KEY").ok())
-            .or_else(|| option_env!("ANTHROPIC_SECRET_KEY").map(String::from))
-            .or_else(|| option_env!("ANTHROPIC_API_KEY").map(String::from))
             .ok_or("API key not configured. Please add your Anthropic API key in Settings.")?;
 
         // Trim any whitespace that might have been included
@@ -189,11 +187,15 @@ pub struct AIClient {
 }
 
 impl AIClient {
-    pub fn new(config: AIConfig) -> Self {
-        Self {
+    pub fn new(config: AIConfig) -> Result<Self, String> {
+        let http_client = Client::builder()
+            .timeout(Duration::from_secs(60))
+            .build()
+            .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        Ok(Self {
             config,
-            http_client: Client::new(),
-        }
+            http_client,
+        })
     }
 
     /// Test the API connection with a minimal request
@@ -304,19 +306,31 @@ impl AIClient {
     }
 
     fn build_classification_prompt(&self, files: &[FileForClassification]) -> String {
-        // Build file list in the format expected by the prompt
-        // IMPORTANT: file_id must be a NUMBER (not quoted string) so AI returns it as number
+        // Build file list using serde_json for proper escaping (prevents prompt injection
+        // from filenames or snippets containing quotes, backslashes, control chars)
+        #[derive(Serialize)]
+        struct PromptFileEntry {
+            file_id: i64,
+            filename: String,
+            preview_text: String,
+        }
+
         let mut file_list = String::new();
         for file in files.iter() {
             let preview = file.snippet.as_deref().unwrap_or("");
-            file_list.push_str(&format!(
-                r#"{{"file_id": {}, "filename": "{}.{}", "preview_text": "{}"}}"#,
-                file.id,  // No quotes - send as number
-                file.filename,
-                file.extension.as_deref().unwrap_or(""),
-                preview.chars().take(300).collect::<String>().replace("\"", "\\\"").replace("\n", " ")
-            ));
-            file_list.push_str("\n");
+            let entry = PromptFileEntry {
+                file_id: file.id,
+                filename: format!(
+                    "{}.{}",
+                    file.filename,
+                    file.extension.as_deref().unwrap_or("")
+                ),
+                preview_text: preview.chars().take(300).collect::<String>(),
+            };
+            if let Ok(json) = serde_json::to_string(&entry) {
+                file_list.push_str(&json);
+                file_list.push('\n');
+            }
         }
 
         format!(

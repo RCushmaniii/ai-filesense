@@ -3,7 +3,8 @@
     "name": "AI FileSense",
     "tagline": "AI-powered file organization",
     "footerPrivacy": "Your files stay local — only metadata is processed",
-    "startOver": "Start new organization"
+    "startOver": "Start new organization",
+    "dashboard": "Dashboard"
   },
   "welcome": {
     "title": "Organize your files with AI",
@@ -180,6 +181,8 @@
     "scanNow": "Scan Now"
   },
   "results": {
+    "safetyNote": "No files have been moved yet. This is a preview of how your files will be organized.",
+    "foldersHeading": "Your files will be organized into these folders:",
     "title": "Here's what we found",
     "ready": "Ready to organize",
     "documentsFound": "We found {count} files to organize",
@@ -276,6 +279,7 @@
     "save": "Save",
     "saved": "Settings saved",
     "testConnection": "Test connection",
+    "testing": "Testing...",
     "connectionSuccess": "Connected successfully",
     "connectionFailed": "Connection failed"
   },
@@ -390,7 +394,13 @@
     "testModeActive": "Test mode active - no files will actually be moved",
     "noFilesDeleted": "No files deleted",
     "undoAvailable": "Undo available",
-    "filesStayLocal": "Files stay local"
+    "filesStayLocal": "Files stay local",
+    "of": "of",
+    "filesOrganized": "files organized",
+    "restoringFiles": "Restoring files...",
+    "errorTitleNonRecoverable": "We had to stop to keep your files safe",
+    "errorMessageNonRecoverable": "No changes were finalized. You can try again after resolving the issue.",
+    "returnToDashboard": "Return to Dashboard"
   },
   "success": {
     "title": "Your files are organized",

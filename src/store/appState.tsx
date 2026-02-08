@@ -465,7 +465,7 @@ function appReducer(state: AppStateData, action: AppAction): AppStateData {
     case 'START_REVIEW':
       return {
         ...state,
-        state: 'REVIEWING',
+        state: 'CLARIFYING',
       };
 
     case 'COMPLETE_REVIEW':
@@ -510,7 +510,7 @@ function appReducer(state: AppStateData, action: AppAction): AppStateData {
     case 'SET_CURRENT_PLAN':
       return {
         ...state,
-        state: 'REVIEWING', // Go to review screen when plan is ready
+        state: 'CLARIFYING', // Skip mock DetailedReviewScreen, go to Quick Fixes
         currentPlan: action.plan,
         isGeneratingPlan: false,
       };

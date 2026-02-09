@@ -1931,6 +1931,48 @@ pub fn get_category_breakdown(
     Ok(results)
 }
 
+/// Subcategory breakdown for Success screen detail view
+#[derive(Debug, Serialize)]
+pub struct SubcategoryBreakdown {
+    pub category: String,
+    pub subcategory: Option<String>,
+    pub count: i64,
+}
+
+/// Get count of files per category+subcategory pair
+#[tauri::command]
+pub fn get_subcategory_breakdown(
+    db_path: State<'_, DbPath>,
+) -> Result<Vec<SubcategoryBreakdown>, String> {
+    let conn = crate::db::open_connection(&db_path.0).map_err(|e| e.to_string())?;
+
+    let mut stmt = conn.prepare(
+        "SELECT
+            COALESCE(am.category, 'Review') as category,
+            am.subcategory,
+            COUNT(*) as count
+         FROM files f
+         LEFT JOIN ai_metadata am ON f.id = am.file_id
+         GROUP BY COALESCE(am.category, 'Review'), am.subcategory
+         ORDER BY category, count DESC"
+    ).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(SubcategoryBreakdown {
+            category: row.get(0)?,
+            subcategory: row.get(1)?,
+            count: row.get(2)?,
+        })
+    }).map_err(|e| e.to_string())?;
+
+    let mut results = Vec::new();
+    for row in rows {
+        results.push(row.map_err(|e| e.to_string())?);
+    }
+
+    Ok(results)
+}
+
 /// Classified file info for Review screen (Screen 6)
 #[derive(Debug, Serialize)]
 pub struct ClassifiedFile {
@@ -2342,18 +2384,16 @@ pub fn get_organized_files_path() -> Result<String, String> {
 #[tauri::command]
 pub async fn open_folder(path: String) -> Result<(), String> {
     // Resolve special paths
-    let full_path = if path.starts_with("Documents/Organized") || path == "Organized Files" {
-        // Get the Documents\Organized Files path
+    let full_path = if path.starts_with("Organized Files") {
+        // Handles "Organized Files", "Organized Files/01 Work", "Organized Files/01 Work/Resumes", etc.
         let base = dirs::document_dir()
             .unwrap_or_else(|| std::path::PathBuf::from("C:\\Documents"));
-
-        if path == "Organized Files" {
-            base.join("Organized Files")
-        } else {
-            // path like "Documents/Organized/00_Review"
-            let subfolder = path.strip_prefix("Documents/").unwrap_or(&path);
-            base.join(subfolder)
-        }
+        base.join(&path)
+    } else if path.starts_with("Documents/") {
+        let base = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("C:\\Documents"));
+        let subfolder = path.strip_prefix("Documents/").unwrap_or(&path);
+        base.join(subfolder)
     } else if path == "Documents" {
         dirs::document_dir().unwrap_or_else(|| std::path::PathBuf::from("C:\\Documents"))
     } else {

@@ -29,10 +29,10 @@ import {
   AlertCircle,
   Eye,
   Loader2,
-  FileText,
+  Folder,
 } from 'lucide-react';
 
-// The 11 guardrail folders in order
+// The 12 guardrail folders in order
 // displayNumber for UI, folderNumber for actual disk path
 const GUARDRAIL_FOLDERS = [
   { id: 'Review', displayNumber: '00', folderNumber: '11', color: 'text-amber-600 dark:text-amber-400' },
@@ -46,10 +46,17 @@ const GUARDRAIL_FOLDERS = [
   { id: 'Clients', displayNumber: '08', folderNumber: '08', color: 'text-indigo-600 dark:text-indigo-400' },
   { id: 'Projects', displayNumber: '09', folderNumber: '09', color: 'text-teal-600 dark:text-teal-400' },
   { id: 'Archive', displayNumber: '10', folderNumber: '10', color: 'text-slate-600 dark:text-slate-400' },
+  { id: 'Travel', displayNumber: '11', folderNumber: '12', color: 'text-sky-600 dark:text-sky-400' },
 ];
 
 interface GuardrailCount {
   category: string;
+  count: number;
+}
+
+interface SubcategoryCount {
+  category: string;
+  subcategory: string | null;
   count: number;
 }
 
@@ -60,6 +67,7 @@ export function SuccessScreen() {
   const [isUndoing, setIsUndoing] = useState(false);
   const [showUndoConfirm, setShowUndoConfirm] = useState(false);
   const [guardrailCounts, setGuardrailCounts] = useState<GuardrailCount[]>([]);
+  const [subcategoryMap, setSubcategoryMap] = useState<Map<string, { subcategory: string; count: number }[]>>(new Map());
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
 
   const isSpanish = language === 'es-MX';
@@ -72,16 +80,30 @@ export function SuccessScreen() {
   const errorsCount = result?.errors?.length || 0;
   const duplicatesCount = 0; // Will come from backend if implemented
 
-  // Load guardrail counts on mount
+  // Load guardrail counts and subcategory breakdown on mount
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        const counts = await invoke<GuardrailCount[]>('get_category_breakdown');
+        const [counts, subcounts] = await Promise.all([
+          invoke<GuardrailCount[]>('get_category_breakdown'),
+          invoke<SubcategoryCount[]>('get_subcategory_breakdown'),
+        ]);
         setGuardrailCounts(counts);
+
+        // Build subcategory map: category -> [{ subcategory, count }]
+        const map = new Map<string, { subcategory: string; count: number }[]>();
+        for (const row of subcounts) {
+          if (row.subcategory) {
+            const existing = map.get(row.category) || [];
+            existing.push({ subcategory: row.subcategory, count: row.count });
+            map.set(row.category, existing);
+          }
+        }
+        setSubcategoryMap(map);
       } catch (err) {
-        console.error('[Success] Error loading guardrail counts:', err);
-        // Fallback: empty counts
+        console.error('[Success] Error loading counts:', err);
         setGuardrailCounts([]);
+        setSubcategoryMap(new Map());
       } finally {
         setIsLoadingCounts(false);
       }
@@ -249,6 +271,7 @@ export function SuccessScreen() {
                 const count = getFolderCount(folder.id);
                 const isExpanded = expandedFolder === folder.id;
                 const isReview = folder.id === 'Review';
+                const subcategories = subcategoryMap.get(folder.id) || [];
 
                 return (
                   <div key={folder.id} className="border rounded-lg overflow-hidden">
@@ -282,15 +305,35 @@ export function SuccessScreen() {
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t bg-muted/30 p-3 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <FileText className="h-4 w-4" />
-                          <span>
-                            {isSpanish
-                              ? `${count} archivos en esta carpeta`
-                              : `${count} files in this folder`}
-                          </span>
-                        </div>
+                      <div className="border-t bg-muted/30 p-3 text-sm space-y-1">
+                        {subcategories.length > 0 ? (
+                          <>
+                            {subcategories.map((sub, idx) => (
+                              <div
+                                key={sub.subcategory}
+                                className="flex items-center gap-2 text-muted-foreground pl-2"
+                              >
+                                <span className="text-muted-foreground/50 text-xs select-none">
+                                  {idx === subcategories.length - 1 ? '└─' : '├─'}
+                                </span>
+                                <Folder className="h-3.5 w-3.5 shrink-0" />
+                                <span className="flex-1">{sub.subcategory}</span>
+                                <span className="tabular-nums">
+                                  {sub.count} {isSpanish ? 'archivos' : 'files'}
+                                </span>
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Folder className="h-4 w-4" />
+                            <span>
+                              {isSpanish
+                                ? `${count} archivos en esta carpeta`
+                                : `${count} files in this folder`}
+                            </span>
+                          </div>
+                        )}
                         <button
                           className="mt-2 text-primary text-sm hover:underline flex items-center gap-1"
                           onClick={() => handleOpenFolder(folder.id)}

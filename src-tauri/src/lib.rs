@@ -180,6 +180,7 @@ pub fn run() {
             commands::discard_incomplete_session,
             // Screen 5-7 commands (per doc 04)
             commands::get_category_breakdown,
+            commands::get_subcategory_breakdown,
             commands::get_files_by_category,
             commands::get_clarification_questions,
             commands::apply_clarification_answer,

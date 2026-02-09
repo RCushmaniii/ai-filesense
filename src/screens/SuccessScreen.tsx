@@ -152,8 +152,8 @@ export function SuccessScreen() {
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
       <div className="max-w-2xl w-full mx-auto space-y-8">
-        {/* Stepper */}
-        <Stepper steps={ORGANIZATION_STEPS} currentStep={7} />
+        {/* Stepper - Step 5 of 5: Done */}
+        <Stepper steps={ORGANIZATION_STEPS} currentStep={4} />
 
         {/* 1. Summary Section - Top */}
         <div className="text-center space-y-4">

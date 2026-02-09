@@ -1,19 +1,16 @@
 /**
- * Results Preview Screen (Screen 5 of 10)
+ * Results Preview Screen (Step 3 of 5: Preview)
  *
- * Purpose: High-level understanding, no action required
- * - Display 12 guardrail folders with file counts
- * - Prefixed with numbers (00-11)
- * - Ordered numerically
- * - READ-ONLY - no file-level actions
- * - Clear statement: "No files have been moved yet."
- *
- * Primary action: Next → proceeds to detailed review
+ * Purpose: Show 12 folders with file counts, then generate plan
+ * - Folders with files: bold text, full-opacity icon
+ * - Empty folders: dimmed
+ * - "Organize my files" button generates plan and moves to execution
+ * - Back button resets to folder selection
  */
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n';
-import { useAppState, CATEGORY_META, Category } from '@/store/appState';
+import { useAppState, CATEGORY_META, Category, OrganizationStyle } from '@/store/appState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Stepper, ORGANIZATION_STEPS } from '@/components/Stepper';
@@ -21,7 +18,6 @@ import { invoke } from '@tauri-apps/api/core';
 import {
   CheckCircle2,
   FileText,
-  ChevronRight,
   ChevronLeft,
   Shield,
   Briefcase,
@@ -36,6 +32,8 @@ import {
   Plane,
   Archive,
   AlertCircle,
+  Loader2,
+  Sparkles,
 } from 'lucide-react';
 
 // Type for category breakdown from backend
@@ -80,6 +78,7 @@ export function ResultsScreen() {
   const { t } = useTranslation();
   const { state, dispatch } = useAppState();
   const [categoryBreakdown, setCategoryBreakdown] = useState<Map<string, number>>(new Map());
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
   // Get actual file count from scan progress
   const totalFiles = state.scanProgress?.totalFiles || 0;
@@ -114,23 +113,54 @@ export function ResultsScreen() {
   }, [totalFiles]);
 
   const handleBack = () => {
-    // Go back to personalization
-    dispatch({
-      type: 'SET_PERSONALIZATION_COMPLETE',
-      hasCompletedPersonalization: false,
-    });
+    dispatch({ type: 'RESET_SCAN' });
   };
 
-  const handleNext = () => {
-    // Move to detailed review (Screen 6)
-    dispatch({ type: 'START_REVIEW' });
+  const handleOrganize = async () => {
+    setIsGeneratingPlan(true);
+    try {
+      const planResult = await invoke<{
+        id: string;
+        name: string;
+        style: string;
+        items: Array<{
+          file_id: number;
+          source_path: string;
+          destination_path: string;
+          confidence: number;
+          reason: string;
+          requires_review: boolean;
+        }>;
+        summary: {
+          total_files: number;
+          high_confidence: number;
+          low_confidence: number;
+          duplicates_found: number;
+          folders_to_create: string[];
+        };
+      }>('generate_organization_plan', {
+        style: 'simple',
+        basePath: null,
+        folderDepth: 'detailed',
+      });
+
+      dispatch({
+        type: 'SET_CURRENT_PLAN',
+        plan: { ...planResult, style: planResult.style as OrganizationStyle },
+      });
+      dispatch({ type: 'COMPLETE_CLARIFICATIONS' });
+    } catch (error) {
+      console.error('Error generating plan:', error);
+      dispatch({ type: 'SET_ERROR', error: String(error) });
+      setIsGeneratingPlan(false);
+    }
   };
 
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
       <div className="max-w-2xl mx-auto w-full space-y-6">
-        {/* Stepper - Step 4 of 8: Results */}
-        <Stepper steps={ORGANIZATION_STEPS} currentStep={3} />
+        {/* Stepper - Step 3 of 5: Preview */}
+        <Stepper steps={ORGANIZATION_STEPS} currentStep={2} />
 
         {/* Back button */}
         <Button
@@ -170,7 +200,7 @@ export function ResultsScreen() {
           </CardContent>
         </Card>
 
-        {/* 12 Guardrail Folders - READ-ONLY */}
+        {/* 12 Guardrail Folders */}
         <div className="space-y-3">
           <h2 className="text-base font-medium text-muted-foreground">
             {t('results.foldersHeading')}
@@ -179,6 +209,7 @@ export function ResultsScreen() {
           <div className="space-y-1">
             {NUMBERED_FOLDERS.map(({ category, number }) => {
               const count = categoryBreakdown.get(category) || 0;
+              const hasFiles = count > 0;
               const Icon = CATEGORY_ICONS[category];
               const meta = CATEGORY_META[category];
               const isReview = category === 'Review';
@@ -187,10 +218,10 @@ export function ResultsScreen() {
                 <div
                   key={category}
                   className={`flex items-center gap-3 p-3 rounded-lg ${
-                    isReview && count > 0
+                    isReview && hasFiles
                       ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900'
                       : 'bg-muted/50'
-                  }`}
+                  } ${!hasFiles ? 'opacity-60' : ''}`}
                 >
                   {/* Number prefix */}
                   <span className="font-mono text-sm text-muted-foreground w-6">
@@ -200,13 +231,20 @@ export function ResultsScreen() {
                   {/* Icon */}
                   <div
                     className="h-8 w-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${meta.color}20`, color: meta.color }}
+                    style={{
+                      backgroundColor: `${meta.color}20`,
+                      color: hasFiles ? meta.color : undefined,
+                    }}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className={`h-4 w-4 ${!hasFiles ? 'text-muted-foreground' : ''}`} />
                   </div>
 
                   {/* Category name */}
-                  <span className={`flex-1 font-medium ${isReview && count > 0 ? 'text-amber-800 dark:text-amber-200' : ''}`}>
+                  <span className={`flex-1 ${
+                    hasFiles
+                      ? `font-semibold ${isReview ? 'text-amber-800 dark:text-amber-200' : ''}`
+                      : 'text-muted-foreground'
+                  }`}>
                     {t(`categories.${category}`)}
                   </span>
 
@@ -229,14 +267,24 @@ export function ResultsScreen() {
           </div>
         )}
 
-        {/* Continue button */}
+        {/* Organize button */}
         <Button
           size="lg"
           className="w-full gap-2"
-          onClick={handleNext}
+          onClick={handleOrganize}
+          disabled={isGeneratingPlan}
         >
-          {t('results.reviewChanges')}
-          <ChevronRight className="h-5 w-5" />
+          {isGeneratingPlan ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {t('results.generatingPlan')}
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-5 w-5" />
+              {t('results.organizeMyFiles')}
+            </>
+          )}
         </Button>
       </div>
     </div>

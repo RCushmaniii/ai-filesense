@@ -374,7 +374,7 @@ Return a single JSON object:
 | Clients | Business clients | Client docs, vendor contracts, customer correspondence, invoices |
 | Projects | Active projects | Project deliverables, milestones, project-specific documents |
 | Travel | Trips and travel docs | Passports, visas, boarding passes, hotel bookings, itineraries, travel insurance |
-| Archive | Historical/inactive | Old docs (3+ years), completed projects, historical records |
+| Archive | Historical/inactive | Old docs (4+ years), completed projects, historical records |
 | Review | Low-confidence items | User decision required, uncertain files |
 
 ### SUBCATEGORY_MAP (Use these values, null, or create dynamic subfolders)
@@ -413,7 +413,7 @@ For categories with null subfolders (Family, Clients, Projects), create dynamic 
 | Client, vendor, customer, "Bill To:", business invoice, company | Clients |
 | "Project:", deliverable, milestone, project name | Projects |
 | Passport, visa, boarding pass, flight, hotel, itinerary, travel insurance | Travel |
-| 3+ years old, historical, archived, completed, inactive | Archive |
+| 4+ years old, historical, archived, completed, inactive | Archive |
 
 **PRIORITY 2: CONTEXTUAL (when content unclear)**
 - Employment context → Work

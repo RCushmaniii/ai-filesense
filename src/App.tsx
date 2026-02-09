@@ -5,7 +5,6 @@ import {
   WelcomeScreen,
   FolderSelectionScreen,
   ScanningScreen,
-  PersonalizationScreen,
   ResultsScreen,
   DetailedReviewScreen,
   QuickFixesScreen,
@@ -74,18 +73,14 @@ function AppContent() {
   }, []);
 
   /**
-   * 10-Screen Workflow Routing:
+   * 5-Step Workflow Routing:
    *
-   * 1. Welcome (with file types) - !hasCompletedWelcome
-   * 2. Select Locations         - READY_TO_SCAN
-   * 3. Scanning Files           - SCANNING, INDEXED_NO_AI, AI_ANALYZING
-   * 4. Personalization          - AI_ANALYZED (if not completed)
-   * 5. Results Preview          - RESULTS_PREVIEW
-   * 6. Review & Exclusions      - REVIEWING
-   * 7. Quick Clarifications     - CLARIFYING
-   * 8. Applying Changes         - EXECUTING
-   * 9. Success                  - ORGANIZATION_COMPLETE
-   * 10. Dashboard               - DASHBOARD
+   * 1. Choose Folders  - READY_TO_SCAN
+   * 2. Scanning        - SCANNING, INDEXED_NO_AI, AI_ANALYZING
+   * 3. Preview         - RESULTS_PREVIEW (AI_ANALYZED falls through here)
+   * 4. Organize        - EXECUTING
+   * 5. Done            - ORGANIZATION_COMPLETE
+   * + Dashboard        - DASHBOARD
    */
   const renderScreen = () => {
     // Screen 1: Welcome (with file type selection)
@@ -105,14 +100,8 @@ function AppContent() {
       case 'AI_ANALYZING':
         return <ScanningScreen />;
 
-      // Screen 4: Personalization (optional)
+      // Fallback: AI_ANALYZED now routes directly to preview
       case 'AI_ANALYZED':
-        // Show personalization if not completed yet
-        if (!state.personalization.hasCompletedPersonalization) {
-          return <PersonalizationScreen />;
-        }
-        // If somehow we're in AI_ANALYZED but personalization is done,
-        // fall through to results preview
         return <ResultsScreen />;
 
       // Screen 5: Results Preview (read-only guardrail summary)

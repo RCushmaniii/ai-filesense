@@ -257,8 +257,8 @@ export function ApplyingChangesScreen() {
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
       <div className="max-w-lg w-full mx-auto space-y-8">
-        {/* Stepper - Step 7 of 8: Apply */}
-        <Stepper steps={ORGANIZATION_STEPS} currentStep={6} />
+        {/* Stepper - Step 4 of 5: Organize */}
+        <Stepper steps={ORGANIZATION_STEPS} currentStep={3} />
 
         {/* A. Title Area - Centered */}
         <div className="text-center space-y-3 pt-8">

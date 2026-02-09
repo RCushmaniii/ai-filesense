@@ -344,7 +344,15 @@ function appReducer(state: AppStateData, action: AppAction): AppStateData {
     case 'COMPLETE_AI_ANALYSIS':
       return {
         ...state,
-        state: 'AI_ANALYZED',
+        state: 'RESULTS_PREVIEW',
+        personalization: {
+          ...state.personalization,
+          folderDepth: 'detailed',
+          archivePolicy: 'archive',
+          lookupStyle: 'topic',
+          hasCompletedPersonalization: true,
+        },
+        selectedOrganizationStyle: 'simple',
       };
 
     case 'SET_API_KEY_CONFIGURED':
@@ -510,7 +518,6 @@ function appReducer(state: AppStateData, action: AppAction): AppStateData {
     case 'SET_CURRENT_PLAN':
       return {
         ...state,
-        state: 'CLARIFYING', // Skip mock DetailedReviewScreen, go to Quick Fixes
         currentPlan: action.plan,
         isGeneratingPlan: false,
       };
@@ -518,7 +525,7 @@ function appReducer(state: AppStateData, action: AppAction): AppStateData {
     case 'CLEAR_PLAN':
       return {
         ...state,
-        state: 'AI_ANALYZED',
+        state: 'RESULTS_PREVIEW',
         currentPlan: null,
         selectedOrganizationStyle: null,
         isGeneratingPlan: false,

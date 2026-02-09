@@ -157,7 +157,7 @@
       }
     },
     "q4": {
-      "title": "What should happen to older documents (3+ years)?",
+      "title": "What should happen to older documents (4+ years)?",
       "options": {
         "keep": {
           "label": "Keep them with current files",
@@ -202,7 +202,8 @@
       "smart_groups": "Smart Groups"
     },
     "needsReview": "files need manual review before placing into a specific folder",
-    "reviewChanges": "Review Changes"
+    "reviewChanges": "Review Changes",
+    "organizeMyFiles": "Organize my files"
   },
   "organizationStyles": {
     "title": "How would you like to organize?",
@@ -309,7 +310,10 @@
       "review": "Review",
       "clarify": "Clarify",
       "apply": "Apply",
-      "success": "Done"
+      "success": "Done",
+      "preview": "Preview",
+      "organize": "Organize",
+      "done": "Done"
     }
   },
   "common": {
@@ -452,7 +456,7 @@
     "reviewFirst": "Send new files to Review first",
     "reviewFirstDesc": "Safe mode: all new files go to Review for your approval.",
     "autoArchive": "Archive older files automatically",
-    "autoArchiveDesc": "Files older than 3 years are moved to Archive.",
+    "autoArchiveDesc": "Files older than 4 years are moved to Archive.",
     "activityTitle": "What changed recently",
     "noRecentActivity": "When files are organized, moved, or archived, you'll see those changes listed here with timestamps and details.",
     "undoLastOrganization": "Undo last organization",
@@ -503,7 +507,7 @@
       },
       "archive": {
         "purpose": "Older files organized by year.",
-        "signals": "Documents older than 3 years, historical records."
+        "signals": "Documents older than 4 years, historical records."
       },
       "default": {
         "purpose": "Documents organized by category."

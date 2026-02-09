@@ -157,7 +157,7 @@
       }
     },
     "q4": {
-      "title": "¿Qué debe pasar con documentos antiguos (3+ años)?",
+      "title": "¿Qué debe pasar con documentos antiguos (4+ años)?",
       "options": {
         "keep": {
           "label": "Mantenerlos con archivos actuales",
@@ -202,7 +202,8 @@
       "smart_groups": "Grupos Inteligentes"
     },
     "needsReview": "archivos necesitan revisión manual antes de colocarlos en una carpeta específica",
-    "reviewChanges": "Revisar Cambios"
+    "reviewChanges": "Revisar Cambios",
+    "organizeMyFiles": "Organizar mis archivos"
   },
   "organizationStyles": {
     "title": "¿Cómo te gustaría organizar?",
@@ -309,7 +310,10 @@
       "review": "Revisar",
       "clarify": "Aclarar",
       "apply": "Aplicar",
-      "success": "Listo"
+      "success": "Listo",
+      "preview": "Vista Previa",
+      "organize": "Organizar",
+      "done": "Listo"
     }
   },
   "common": {
@@ -452,7 +456,7 @@
     "reviewFirst": "Enviar archivos nuevos a Revisar primero",
     "reviewFirstDesc": "Modo seguro: todos los archivos nuevos van a Revisar para tu aprobación.",
     "autoArchive": "Archivar archivos antiguos automáticamente",
-    "autoArchiveDesc": "Los archivos de más de 3 años se mueven a Archivo.",
+    "autoArchiveDesc": "Los archivos de más de 4 años se mueven a Archivo.",
     "activityTitle": "Qué cambió recientemente",
     "noRecentActivity": "Cuando se organicen, muevan o archiven archivos, verás esos cambios listados aquí con fechas y detalles.",
     "undoLastOrganization": "Deshacer última organización",
@@ -503,7 +507,7 @@
       },
       "archive": {
         "purpose": "Archivos antiguos organizados por año.",
-        "signals": "Documentos de más de 3 años, registros históricos."
+        "signals": "Documentos de más de 4 años, registros históricos."
       },
       "default": {
         "purpose": "Documentos organizados por categoría."

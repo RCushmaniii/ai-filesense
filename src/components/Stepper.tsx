@@ -76,15 +76,12 @@ export function Stepper({ steps, currentStep, className = '' }: StepperProps) {
   );
 }
 
-// Predefined steps for the organization wizard (Screens 2-9)
-// Screen 1 (Welcome) and Screen 10 (Dashboard) don't show the stepper
+// Predefined steps for the organization wizard (5-step flow)
+// Welcome and Dashboard don't show the stepper
 export const ORGANIZATION_STEPS: Step[] = [
-  { id: 'folders', labelKey: 'stepper.steps.folders' },        // Screen 2: Select Locations
-  { id: 'scan', labelKey: 'stepper.steps.scan' },              // Screen 3: Scanning
-  { id: 'personalize', labelKey: 'stepper.steps.personalize' },// Screen 4: Personalization
-  { id: 'results', labelKey: 'stepper.steps.results' },        // Screen 5: Results Preview
-  { id: 'review', labelKey: 'stepper.steps.review' },          // Screen 6: Review & Exclusions
-  { id: 'clarify', labelKey: 'stepper.steps.clarify' },        // Screen 7: Quick Clarifications
-  { id: 'apply', labelKey: 'stepper.steps.apply' },            // Screen 8: Applying Changes
-  { id: 'success', labelKey: 'stepper.steps.success' },        // Screen 9: Success
+  { id: 'folders', labelKey: 'stepper.steps.folders' },
+  { id: 'scan', labelKey: 'stepper.steps.scan' },
+  { id: 'preview', labelKey: 'stepper.steps.preview' },
+  { id: 'organize', labelKey: 'stepper.steps.organize' },
+  { id: 'done', labelKey: 'stepper.steps.done' },
 ];

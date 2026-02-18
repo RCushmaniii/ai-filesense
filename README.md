@@ -57,58 +57,37 @@ Files are automatically sorted into 11 life-area categories:
 
 ---
 
-## User Journey (8 Steps)
+## User Journey (5 Steps)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 1: Select Folders & File Types                                     │
-│  Choose Desktop, Documents, Downloads, or custom folders                 │
+│  STEP 1: Choose Folders                                                  │
+│  Select Desktop, Documents, Downloads, or add custom folders             │
 │  Pick which file types to organize (PDF, Word, Text, PowerPoint)         │
 └─────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 2: Scanning                                                        │
+│  STEP 2: Scan                                                            │
 │  AI analyzes file content (locally extracted, snippets sent to AI)       │
-│  Progress shows with reassuring status messages                          │
+│  Progress bar with reassuring status messages                            │
 └─────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 3: Personalization                                                 │
-│  4 questions to understand how you work:                                 │
-│  • Your roles (parent, student, freelancer, etc.)                        │
-│  • How you look up files (by topic, time, or project)                    │
-│  • Folder depth preference (light, moderate, detailed)                   │
-│  • Archive policy (keep all or auto-archive old files)                   │
+│  STEP 3: Preview                                                         │
+│  See how files will be organized across categories                       │
+│  Review results, exclude files, answer AI clarifying questions           │
+│  Choose organization depth (light, moderate, detailed)                   │
 └─────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 4: Results Preview                                                 │
-│  See how many files will go into each category                           │
-│  Review which files need manual attention                                │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 5: Detailed Review                                                 │
-│  Two-panel view: folder tree + file list                                 │
-│  Exclude specific files or entire folders from organization              │
-│  Optional: Enable test mode to preview without moving files              │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 6: Quick Clarifications                                            │
-│  AI asks about ambiguous files (e.g., "Is 'Acme' a client or employer?") │
-│  Your answers directly update file destinations                          │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 7: Applying Changes                                                │
+│  STEP 4: Organize                                                        │
 │  Files move to Documents/Organized Files/                                │
 │  Real-time progress with file counts                                     │
 │  Every move logged for undo capability                                   │
 └─────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  STEP 8: Success                                                         │
+│  STEP 5: Done                                                            │
 │  Summary of what was organized                                           │
 │  Quick access to view organized folders                                  │
 │  One-click undo available                                                │
@@ -177,17 +156,15 @@ The numbered 11-folder system (01-11) ensures:
 2. **Install** by running the `.msi` or `.exe` installer
 3. **Launch** AI FileSense from Start menu or Desktop
 4. **Select language** (English or Spanish)
-5. **Click "Get Started"** to begin the 8-step organization process
+5. **Click "Get Started"** to begin the 5-step organization process
 
 ### First Organization
 
-1. **Choose folders** — Desktop, Documents, and Downloads are selected by default
-2. **Pick file types** — PDF, Word, and Text files are supported
-3. **Wait for scan** — AI analyzes your files (typically 1-2 minutes for 100 files)
-4. **Answer questions** — Tell AI about your work style (4 quick questions)
-5. **Review the plan** — See where files will go, exclude any you want to keep
-6. **Approve & organize** — Files move to `Documents/Organized Files/`
-7. **Done!** — Access your organized files anytime
+1. **Choose folders & file types** — Desktop, Documents, and Downloads selected by default
+2. **Wait for scan** — AI analyzes your files (typically 1-2 minutes for 100 files)
+3. **Preview & review** — See where files will go, exclude any you want to keep, answer clarifying questions
+4. **Organize** — Files move to `Documents/Organized Files/`
+5. **Done!** — Access your organized files, undo anytime
 
 ### Output Location
 
@@ -231,7 +208,7 @@ The **Review folder (11 Review)** contains files where the AI wasn't confident a
 
 ### 4. Can I exclude certain files from being organized?
 
-**Yes!** In Step 5 (Detailed Review), you can:
+**Yes!** In Step 3 (Preview), you can:
 - Uncheck specific files to exclude them
 - Exclude entire folders/categories
 - Enable "Test mode" to preview without moving anything
@@ -261,8 +238,8 @@ All files are moved to `Documents\Organized Files\` with numbered subfolders (01
 ### 9. What if the AI categorizes a file incorrectly?
 
 You have multiple opportunities to correct this:
-- **Step 6 (Quick Clarifications):** AI asks about ambiguous files
-- **Step 5 (Detailed Review):** Exclude files from organization
+- **Step 3 (Preview):** AI asks clarifying questions about ambiguous files
+- **Step 3 (Preview):** Exclude files from organization
 - **After organization:** Move files manually or use Undo
 
 The AI learns from the clarification questions you answer, improving accuracy for similar files.

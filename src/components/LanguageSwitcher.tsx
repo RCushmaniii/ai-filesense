@@ -1,5 +1,4 @@
 import { useI18n, languages, Language } from '../i18n';
-import { Globe } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 export function LanguageSwitcher({ minimal = false }: { minimal?: boolean }) {

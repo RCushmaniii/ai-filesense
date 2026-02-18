@@ -9,6 +9,10 @@
 
 AI FileSense uses artificial intelligence to understand and organize your files based on their actual content—not just filenames. Clean up your Desktop in minutes with AI-powered categorization.
 
+![AI FileSense — Choose folders to scan](public/images/AI-FileSense-readme.jpg)
+
+Built for Windows users who want to organize their Desktop, Documents, and Downloads without uploading files to the cloud.
+
 **Website:** [ai-filesense-website.vercel.app](https://ai-filesense-website.vercel.app)
 
 ---

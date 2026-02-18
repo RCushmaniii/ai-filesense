@@ -42,6 +42,11 @@ metrics:
   - "10 free scans per user (backend-enforced)"
 
 # === LINKS ===
+video_brief:
+  path: "public/video/AI_FileSense-brief.mp4"
+  poster: "public/video/AI-FileSense-brief-poster.jpg"
+  alt: "AI FileSense product brief — from digital chaos to automated order"
+  caption: "60-second product brief showing how AI FileSense turns file clutter into a clean, consistent 12-folder system."
 demo_url: ""
 live_url: ""
 
@@ -99,6 +104,12 @@ AI FileSense solves a universal problem: digital file clutter. Most people have 
 AI FileSense takes a different approach. It's a lightweight Windows desktop app (~5 MB) that uses Claude Haiku to read actual document content and classify each file into a consistent 12-folder system. Files never leave the user's computer — only filenames and 300-character text snippets are sent to the AI. Every file move is transaction-logged with full undo support, crash recovery, and a test mode that lets users preview changes before anything moves.
 
 The key differentiator is accessibility. Unlike other AI tools that require API keys, terminal commands, and developer knowledge, AI FileSense requires zero configuration. The developer provides the Anthropic API key via a freemium model — users just click "Scan" and the AI does the rest. The app is also natively bilingual (English + Spanish/Mexico), serving the large US Hispanic market with a first-class localized experience, not a machine-translated afterthought.
+
+## Video Brief
+
+[![AI FileSense product brief](public/video/AI-FileSense-brief-poster.jpg)](public/video/AI_FileSense-brief.mp4)
+
+**60-second product brief** showing how AI FileSense turns file clutter into a clean, consistent 12-folder system — powered by Claude Haiku, fully local, and zero configuration required.
 
 ## Slide Deck
 

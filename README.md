@@ -345,7 +345,8 @@ npm run tauri build
 
 ## Links
 
-- **Website:** [ai-filesense-website.vercel.app](https://ai-filesense-website.vercel.app)
+- **Live Demo:** [ai-filesense-website.vercel.app](https://ai-filesense-website.vercel.app/)
+- **Website:** [ai-filesense-website.vercel.app](https://ai-filesense-website.vercel.app/)
 - **Privacy Policy:** [ai-filesense-website.vercel.app/privacy](https://ai-filesense-website.vercel.app/privacy)
 - **Terms of Service:** [ai-filesense-website.vercel.app/terms](https://ai-filesense-website.vercel.app/terms)
 

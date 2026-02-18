@@ -47,8 +47,8 @@ video_brief:
   poster: "public/video/AI-FileSense-brief-poster.jpg"
   alt: "AI FileSense product brief — from digital chaos to automated order"
   caption: "60-second product brief showing how AI FileSense turns file clutter into a clean, consistent 12-folder system."
-demo_url: ""
-live_url: ""
+demo_url: "https://ai-filesense-website.vercel.app/"
+live_url: "https://ai-filesense-website.vercel.app/"
 
 # === OPTIONAL ===
 hero_images:

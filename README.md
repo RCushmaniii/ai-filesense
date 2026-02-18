@@ -22,7 +22,7 @@ Built for Windows users who want to organize their Desktop, Documents, and Downl
 ### Core Capabilities
 
 - **AI-Powered Classification** — Uses Claude Haiku to categorize files by actual content analysis
-- **11-Folder Smart System** — Organized numbered folders (01 Work, 02 Money, 03 Home, etc.) that sort consistently across file systems
+- **12-Folder Smart System** — Organized numbered folders (01 Work, 02 Money, 03 Home, etc.) that sort consistently across file systems
 - **3-Level Organization Depth** — Choose from Lightly Organized, More Organized, or Fully Organized folder structures
 - **Safe & Reversible** — Preview every change before it happens, with one-click undo
 - **Privacy First** — All file scanning happens locally; only small text snippets sent to AI for classification
@@ -39,7 +39,7 @@ Built for Windows users who want to organize their Desktop, Documents, and Downl
 
 ### Smart Categories
 
-Files are automatically sorted into 11 life-area categories:
+Files are automatically sorted into 12 life-area categories:
 
 | # | Category | What Goes Here |
 |---|----------|----------------|
@@ -52,8 +52,9 @@ Files are automatically sorted into 11 life-area categories:
 | 07 | Family | Family correspondence, kids' records, personal letters |
 | 08 | Clients | Client docs, vendor contracts, invoices (freelancers/SMB) |
 | 09 | Projects | Project deliverables, milestones, active work |
-| 10 | Archive | Old docs (3+ years), completed projects, historical |
-| 11 | Review | Low-confidence items needing manual sorting |
+| 10 | Travel | Itineraries, bookings, boarding passes, visas |
+| 11 | Archive | Old docs (3+ years), completed projects, historical |
+| 12 | Review | Low-confidence items needing manual sorting |
 
 ---
 
@@ -123,7 +124,7 @@ AI suggests, you decide:
 - SQLite database stays on your machine
 
 ### 5. Smart Folder Structure
-The numbered 11-folder system (01-11) ensures:
+The numbered 12-folder system (01-12) ensures:
 - Consistent sort order on any file system
 - Clear life-area categories that make sense
 - Subfolders for detailed organization when wanted
@@ -180,8 +181,9 @@ C:\Users\<YourName>\Documents\Organized Files\
 ├── 07 Family\
 ├── 08 Clients\
 ├── 09 Projects\
-├── 10 Archive\
-└── 11 Review\
+├── 10 Travel\
+├── 11 Archive\
+└── 12 Review\
 ```
 
 ### Starting Over
@@ -204,7 +206,7 @@ C:\Users\<YourName>\Documents\Organized Files\
 
 ### 3. Why are some files put in the "Review" folder?
 
-The **Review folder (11 Review)** contains files where the AI wasn't confident about the correct category. This is intentional—rather than guess wrong, AI FileSense lets you decide. You can manually move these files or re-run organization after adding more context.
+The **Review folder (12 Review)** contains files where the AI wasn't confident about the correct category. This is intentional—rather than guess wrong, AI FileSense lets you decide. You can manually move these files or re-run organization after adding more context.
 
 ### 4. Can I exclude certain files from being organized?
 
@@ -302,7 +304,7 @@ npm run tauri build
 
 ### Phase 1 (Current) ✅
 - [x] AI-powered file classification
-- [x] 11-folder smart organization system
+- [x] 12-folder smart organization system
 - [x] Full English/Spanish bilingual support
 - [x] PDF, Word, PowerPoint, Text file support
 - [x] Safe preview and undo system

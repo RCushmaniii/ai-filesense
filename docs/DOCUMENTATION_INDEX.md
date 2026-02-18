@@ -31,6 +31,7 @@ This index provides an overview of all project documentation.
 
 | Document | Description |
 |----------|-------------|
+| [MARKETING_FEATURES.md](MARKETING_FEATURES.md) | Complete features, benefits, differentiators, and competitive positioning |
 | [WEBSITE_PRD.md](WEBSITE_PRD.md) | Website product requirements |
 
 ## Redesign Plan (Specification Package)

@@ -18,7 +18,7 @@ tech_stack:
   - "Claude Haiku"
   - "shadcn/ui"
   - "Tailwind CSS"
-thumbnail: "public/images/ai-filesense-02.png"
+thumbnail: "public/images/ai-filesense-thumb.jpg"
 status: "In Development"
 
 # === DETAIL PAGE ===

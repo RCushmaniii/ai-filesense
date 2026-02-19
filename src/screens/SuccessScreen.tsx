@@ -60,8 +60,14 @@ interface SubcategoryCount {
   count: number;
 }
 
+interface UndoOperationResult {
+  files_restored: number;
+  files_failed: number;
+  errors: string[];
+}
+
 export function SuccessScreen() {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const { state, dispatch } = useAppState();
   const [expandedFolder, setExpandedFolder] = useState<string | null>(null);
   const [isUndoing, setIsUndoing] = useState(false);
@@ -69,8 +75,7 @@ export function SuccessScreen() {
   const [guardrailCounts, setGuardrailCounts] = useState<GuardrailCount[]>([]);
   const [subcategoryMap, setSubcategoryMap] = useState<Map<string, { subcategory: string; count: number }[]>>(new Map());
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
-
-  const isSpanish = language === 'es-MX';
+  const [undoFeedback, setUndoFeedback] = useState<{ type: 'success' | 'partial' | 'error'; message: string } | null>(null);
 
   // Get stats from execution result in state
   const result = state.executionResult;
@@ -134,11 +139,32 @@ export function SuccessScreen() {
 
   const handleUndo = async () => {
     setIsUndoing(true);
+    setUndoFeedback(null);
     try {
-      await invoke('undo_last_operation');
-      dispatch({ type: 'RESET_SCAN' });
+      const result = await invoke<UndoOperationResult>('undo_last_operation');
+      const total = result.files_restored + result.files_failed;
+
+      if (result.files_failed === 0) {
+        setUndoFeedback({ type: 'success', message: t('common.undoComplete') });
+        setTimeout(() => {
+          dispatch({ type: 'RESET_SCAN' });
+        }, 2000);
+      } else if (result.files_restored > 0) {
+        setUndoFeedback({
+          type: 'partial',
+          message: t('common.undoPartial')
+            .replace('{restored}', String(result.files_restored))
+            .replace('{total}', String(total))
+            .replace('{failed}', String(result.files_failed)),
+        });
+        setIsUndoing(false);
+      } else {
+        setUndoFeedback({ type: 'error', message: t('common.undoFailed') });
+        setIsUndoing(false);
+      }
     } catch (error) {
       console.error('Error undoing:', error);
+      setUndoFeedback({ type: 'error', message: t('common.undoFailed') });
       setIsUndoing(false);
     }
   };
@@ -225,7 +251,7 @@ export function SuccessScreen() {
                     {reviewCount}
                   </p>
                   <p className="text-[14px] text-muted-foreground">
-                    {isSpanish ? 'para revisar' : 'in Review'}
+                    {t('success.inReview')}
                   </p>
                 </div>
               )}
@@ -236,7 +262,7 @@ export function SuccessScreen() {
                     {duplicatesCount}
                   </p>
                   <p className="text-[14px] text-muted-foreground">
-                    {isSpanish ? 'duplicados' : 'duplicates'}
+                    {t('success.duplicates')}
                   </p>
                 </div>
               )}
@@ -244,9 +270,7 @@ export function SuccessScreen() {
 
             {/* Reassurance Line - Always visible */}
             <p className="text-center text-[15px] text-muted-foreground mt-4 pt-4 border-t">
-              {isSpanish
-                ? 'No se eliminaron archivos. Deshacer disponible.'
-                : 'No files were deleted. Undo is available.'}
+              {t('success.reassurance')}
             </p>
           </CardContent>
         </Card>
@@ -254,7 +278,7 @@ export function SuccessScreen() {
         {/* 2. Guardrail Breakdown - Core Transparency */}
         <div className="space-y-3">
           <h2 className="text-[16px] font-medium">
-            {isSpanish ? 'Dónde fueron tus archivos' : 'Where your files went'}
+            {t('success.whereFilesWent')}
           </h2>
 
           {isLoadingCounts ? (
@@ -263,7 +287,7 @@ export function SuccessScreen() {
             </div>
           ) : foldersWithFiles.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              {isSpanish ? 'No se movieron archivos' : 'No files were moved'}
+              {t('success.noFilesMoved')}
             </p>
           ) : (
             <div className="space-y-1">
@@ -294,7 +318,7 @@ export function SuccessScreen() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[15px] text-muted-foreground">
-                          {count} {isSpanish ? 'archivos' : 'files'}
+                          {count} {t('common.files')}
                         </span>
                         {isExpanded ? (
                           <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -319,7 +343,7 @@ export function SuccessScreen() {
                                 <Folder className="h-3.5 w-3.5 shrink-0" />
                                 <span className="flex-1">{sub.subcategory}</span>
                                 <span className="tabular-nums">
-                                  {sub.count} {isSpanish ? 'archivos' : 'files'}
+                                  {sub.count} {t('common.files')}
                                 </span>
                               </div>
                             ))}
@@ -328,9 +352,7 @@ export function SuccessScreen() {
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Folder className="h-4 w-4" />
                             <span>
-                              {isSpanish
-                                ? `${count} archivos en esta carpeta`
-                                : `${count} files in this folder`}
+                              {t('success.filesInFolder').replace('{count}', String(count))}
                             </span>
                           </div>
                         )}
@@ -339,7 +361,7 @@ export function SuccessScreen() {
                           onClick={() => handleOpenFolder(folder.id)}
                         >
                           <FolderOpen className="h-3 w-3" />
-                          {isSpanish ? 'Ver carpeta' : 'View folder'}
+                          {t('success.viewFolder')}
                         </button>
                       </div>
                     )}
@@ -358,14 +380,10 @@ export function SuccessScreen() {
                 <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="flex-1 space-y-2">
                   <p className="text-[15px] font-medium text-amber-800 dark:text-amber-200">
-                    {isSpanish
-                      ? 'Algunos archivos necesitan tu revisión'
-                      : 'A few files need your input'}
+                    {t('success.reviewNeeded')}
                   </p>
                   <p className="text-[14px] text-amber-700 dark:text-amber-300">
-                    {isSpanish
-                      ? `${reviewCount} archivos no se movieron porque no estábamos completamente seguros.`
-                      : `${reviewCount} files weren't moved because we weren't fully confident.`}
+                    {t('success.reviewExplanation').replace('{count}', String(reviewCount))}
                   </p>
                   <div className="flex gap-3 pt-1">
                     <Button
@@ -374,10 +392,10 @@ export function SuccessScreen() {
                       className="bg-amber-600 hover:bg-amber-700"
                       onClick={handleReviewNow}
                     >
-                      {isSpanish ? 'Revisar ahora' : 'Review now'}
+                      {t('success.reviewNow')}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={handleDashboard}>
-                      {isSpanish ? 'Hacer después' : 'Do this later'}
+                      {t('success.doLater')}
                     </Button>
                   </div>
                 </div>
@@ -389,9 +407,7 @@ export function SuccessScreen() {
         {/* Skipped files notice (if any) */}
         {errorsCount > 0 && (
           <p className="text-sm text-muted-foreground text-center">
-            {isSpanish
-              ? `${errorsCount} archivos no pudieron moverse y se dejaron en su lugar.`
-              : `${errorsCount} files couldn't be moved and were left in place.`}
+            {t('success.skippedFiles').replace('{count}', String(errorsCount))}
           </p>
         )}
 
@@ -400,9 +416,7 @@ export function SuccessScreen() {
           <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 text-[15px]">
             <CheckCircle2 className="h-4 w-4" />
             <span>
-              {isSpanish
-                ? 'No hay nada que revisar ahora'
-                : 'Nothing needs review right now'}
+              {t('success.nothingToReview')}
             </span>
           </div>
         )}
@@ -412,7 +426,7 @@ export function SuccessScreen() {
           {/* Primary action */}
           <Button size="lg" className="w-full gap-2" onClick={handleDashboard}>
             <LayoutDashboard className="h-5 w-5" />
-            {isSpanish ? 'Ir al panel' : 'Go to dashboard'}
+            {t('success.goToDashboard')}
           </Button>
 
           {/* Secondary action */}
@@ -423,7 +437,7 @@ export function SuccessScreen() {
             onClick={() => handleOpenFolder()}
           >
             <Eye className="h-5 w-5" />
-            {isSpanish ? 'Revisar organización' : 'Review organization'}
+            {t('success.reviewOrganization')}
           </Button>
         </div>
 
@@ -431,16 +445,27 @@ export function SuccessScreen() {
         <div className="border-t pt-6 space-y-3">
           <div className="text-center">
             <p className="text-[15px] text-muted-foreground">
-              {isSpanish
-                ? 'Restaurar archivos a sus ubicaciones originales.'
-                : 'Restore files to their original locations.'}
+              {t('success.restoreExplanation')}
             </p>
           </div>
+
+          {/* Undo feedback message */}
+          {undoFeedback && (
+            <div className={`text-center text-sm p-2 rounded ${
+              undoFeedback.type === 'success'
+                ? 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30'
+                : undoFeedback.type === 'partial'
+                ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30'
+                : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30'
+            }`}>
+              {undoFeedback.message}
+            </div>
+          )}
 
           {showUndoConfirm ? (
             <div className="flex items-center justify-center gap-3">
               <span className="text-sm text-muted-foreground">
-                {isSpanish ? '¿Estás seguro?' : 'Are you sure?'}
+                {t('success.confirmUndo')}
               </span>
               <Button
                 variant="outline"
@@ -451,7 +476,7 @@ export function SuccessScreen() {
                 {isUndoing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  isSpanish ? 'Sí, deshacer' : 'Yes, undo'
+                  t('success.yesUndo')
                 )}
               </Button>
               <Button
@@ -460,7 +485,7 @@ export function SuccessScreen() {
                 onClick={() => setShowUndoConfirm(false)}
                 disabled={isUndoing}
               >
-                {isSpanish ? 'Cancelar' : 'Cancel'}
+                {t('common.cancel')}
               </Button>
             </div>
           ) : (
@@ -471,7 +496,7 @@ export function SuccessScreen() {
                 onClick={() => setShowUndoConfirm(true)}
               >
                 <Undo2 className="h-4 w-4" />
-                {isSpanish ? 'Deshacer organización' : 'Undo organization'}
+                {t('success.undoOrganization')}
               </Button>
             </div>
           )}

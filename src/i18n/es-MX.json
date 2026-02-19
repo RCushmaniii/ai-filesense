@@ -328,7 +328,10 @@
     "error": "Ocurrió un error",
     "retry": "Intentar de nuevo",
     "files": "archivos",
-    "folders": "carpetas"
+    "folders": "carpetas",
+    "undoComplete": "Todos los archivos fueron restaurados exitosamente.",
+    "undoPartial": "{restored} de {total} archivos restaurados. {failed} no pudieron restaurarse.",
+    "undoFailed": "No se pudieron restaurar los archivos."
   },
   "errors": {
     "scanFailed": "Error al escanear archivos",
@@ -457,9 +460,20 @@
     "reviewFirstDesc": "Modo seguro: todos los archivos nuevos van a Revisar para tu aprobación.",
     "autoArchive": "Archivar archivos antiguos automáticamente",
     "autoArchiveDesc": "Los archivos de más de 4 años se mueven a Archivo.",
+    "dashboardTitle": "Panel de AI FileSense",
+    "filesNeedReview": "{count} archivos necesitan revisión",
+    "newFilesDetected": "{count} archivos nuevos detectados",
+    "duplicateGroups": "{count} grupos de duplicados",
+    "movedTo": "movidos a",
+    "leftIn": "dejados en",
+    "why": "¿Por qué?",
     "activityTitle": "Qué cambió recientemente",
     "noRecentActivity": "Cuando se organicen, muevan o archiven archivos, verás esos cambios listados aquí con fechas y detalles.",
     "undoLastOrganization": "Deshacer última organización",
+    "undoConfirmQuestion": "¿Deshacer la última organización?",
+    "later": "Después",
+    "updatedToday": "Actualizado hoy",
+    "openFolder": "Abrir carpeta",
     "folderInfo": {
       "review": {
         "purpose": "Archivos que necesitan tu decisión antes de organizarse.",

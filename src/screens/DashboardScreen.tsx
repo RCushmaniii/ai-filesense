@@ -99,6 +99,12 @@ interface DashboardData {
   recentActivity: ActivityEntry[];
 }
 
+interface UndoOperationResult {
+  files_restored: number;
+  files_failed: number;
+  errors: string[];
+}
+
 export function DashboardScreen() {
   const { t, language } = useTranslation();
   const { dispatch } = useAppState();
@@ -108,6 +114,7 @@ export function DashboardScreen() {
   const [activityExpanded, setActivityExpanded] = useState(false);
   const [showUndoConfirm, setShowUndoConfirm] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
+  const [undoFeedback, setUndoFeedback] = useState<{ type: 'success' | 'partial' | 'error'; message: string } | null>(null);
 
   // Dismissed attention cards
   const [dismissedCards, setDismissedCards] = useState<Set<string>>(new Set());
@@ -116,48 +123,49 @@ export function DashboardScreen() {
 
   // Load dashboard data on mount
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Get guardrail counts from backend
-        const counts = await invoke<GuardrailCount[]>('get_category_breakdown');
-
-        // For now, simulate other dashboard data
-        // In production, these would come from backend
-        setData({
-          lastOrganized: new Date().toLocaleString(isSpanish ? 'es-MX' : 'en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          }),
-          guardrailCounts: counts,
-          newFilesCount: 0, // Will come from file watcher
-          duplicatesCount: 0, // Will come from backend
-          automationEnabled: true,
-          reviewFirstEnabled: false,
-          autoArchiveEnabled: false,
-          recentActivity: [],
-        });
-      } catch (err) {
-        console.error('[Dashboard] Error loading data:', err);
-        // Fallback with empty data
-        setData({
-          lastOrganized: null,
-          guardrailCounts: [],
-          newFilesCount: 0,
-          duplicatesCount: 0,
-          automationEnabled: true,
-          reviewFirstEnabled: false,
-          autoArchiveEnabled: false,
-          recentActivity: [],
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadData();
   }, [isSpanish]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      // Get guardrail counts from backend
+      const counts = await invoke<GuardrailCount[]>('get_category_breakdown');
+
+      // For now, simulate other dashboard data
+      // In production, these would come from backend
+      setData({
+        lastOrganized: new Date().toLocaleString(isSpanish ? 'es-MX' : 'en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+        guardrailCounts: counts,
+        newFilesCount: 0, // Will come from file watcher
+        duplicatesCount: 0, // Will come from backend
+        automationEnabled: true,
+        reviewFirstEnabled: false,
+        autoArchiveEnabled: false,
+        recentActivity: [],
+      });
+    } catch (err) {
+      console.error('[Dashboard] Error loading data:', err);
+      // Fallback with empty data
+      setData({
+        lastOrganized: null,
+        guardrailCounts: [],
+        newFilesCount: 0,
+        duplicatesCount: 0,
+        automationEnabled: true,
+        reviewFirstEnabled: false,
+        autoArchiveEnabled: false,
+        recentActivity: [],
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getLocalizedCategory = (category: string) => {
     return t(`categories.${category}`);
@@ -209,11 +217,33 @@ export function DashboardScreen() {
 
   const handleUndo = async () => {
     setIsUndoing(true);
+    setUndoFeedback(null);
     try {
-      await invoke('undo_last_operation');
-      dispatch({ type: 'RESET_SCAN' });
+      const result = await invoke<UndoOperationResult>('undo_last_operation');
+      const total = result.files_restored + result.files_failed;
+
+      if (result.files_failed === 0) {
+        setUndoFeedback({ type: 'success', message: t('common.undoComplete') });
+        // Refresh folder counts after undo
+        setTimeout(() => {
+          loadData();
+        }, 1000);
+      } else if (result.files_restored > 0) {
+        setUndoFeedback({
+          type: 'partial',
+          message: t('common.undoPartial')
+            .replace('{restored}', String(result.files_restored))
+            .replace('{total}', String(total))
+            .replace('{failed}', String(result.files_failed)),
+        });
+        // Refresh folder counts
+        loadData();
+      } else {
+        setUndoFeedback({ type: 'error', message: t('common.undoFailed') });
+      }
     } catch (error) {
       console.error('[Dashboard] Error undoing:', error);
+      setUndoFeedback({ type: 'error', message: t('common.undoFailed') });
     } finally {
       setIsUndoing(false);
       setShowUndoConfirm(false);
@@ -270,7 +300,7 @@ export function DashboardScreen() {
       <div className="max-w-3xl w-full mx-auto space-y-8">
         {/* Dashboard Title */}
         <h1 className="text-2xl font-semibold">
-          {isSpanish ? 'Panel de AI FileSense' : 'AI FileSense Dashboard'}
+          {t('dashboard.dashboardTitle')}
         </h1>
 
         {/* A. Status & Health Summary (Top Strip) */}
@@ -312,9 +342,7 @@ export function DashboardScreen() {
                       <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                       <div className="space-y-2">
                         <p className="text-[15px] font-medium text-amber-800 dark:text-amber-200">
-                          {isSpanish
-                            ? `${reviewCount} archivos necesitan revisión`
-                            : `${reviewCount} files need review`}
+                          {t('dashboard.filesNeedReview').replace('{count}', String(reviewCount))}
                         </p>
                         <div className="flex gap-2">
                           <Button size="sm" onClick={handleReviewNow}>
@@ -325,7 +353,7 @@ export function DashboardScreen() {
                             variant="ghost"
                             onClick={() => handleDismissCard('review')}
                           >
-                            {isSpanish ? 'Después' : 'Later'}
+                            {t('dashboard.later')}
                           </Button>
                         </div>
                       </div>
@@ -350,9 +378,7 @@ export function DashboardScreen() {
                       <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                       <div className="space-y-2">
                         <p className="text-[15px] font-medium">
-                          {isSpanish
-                            ? `${data?.newFilesCount} archivos nuevos detectados`
-                            : `${data?.newFilesCount} new files detected`}
+                          {t('dashboard.newFilesDetected').replace('{count}', String(data?.newFilesCount))}
                         </p>
                         <p className="text-[14px] text-muted-foreground">
                           {t('dashboard.newFilesSubtext')}
@@ -366,7 +392,7 @@ export function DashboardScreen() {
                             variant="ghost"
                             onClick={() => handleDismissCard('newFiles')}
                           >
-                            {isSpanish ? 'Después' : 'Later'}
+                            {t('dashboard.later')}
                           </Button>
                         </div>
                       </div>
@@ -391,9 +417,7 @@ export function DashboardScreen() {
                       <Copy className="h-5 w-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
                       <div className="space-y-2">
                         <p className="text-[15px] font-medium">
-                          {isSpanish
-                            ? `${data?.duplicatesCount} grupos de duplicados`
-                            : `${data?.duplicatesCount} duplicate groups`}
+                          {t('dashboard.duplicateGroups').replace('{count}', String(data?.duplicatesCount))}
                         </p>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline">
@@ -404,7 +428,7 @@ export function DashboardScreen() {
                             variant="ghost"
                             onClick={() => handleDismissCard('duplicates')}
                           >
-                            {isSpanish ? 'Después' : 'Later'}
+                            {t('dashboard.later')}
                           </Button>
                         </div>
                       </div>
@@ -516,11 +540,11 @@ export function DashboardScreen() {
                         {getLocalizedCategory(folder.id)}
                       </p>
                       <p className="text-[13px] text-muted-foreground">
-                        {count} {isSpanish ? 'archivos' : 'files'}
+                        {count} {t('common.files')}
                       </p>
                       {recentlyUpdated && (
                         <p className="text-[12px] text-primary mt-1">
-                          {isSpanish ? 'Actualizado hoy' : 'Updated today'}
+                          {t('dashboard.updatedToday')}
                         </p>
                       )}
                     </div>
@@ -539,7 +563,7 @@ export function DashboardScreen() {
                           }}
                         >
                           <FolderOpen className="h-3 w-3" />
-                          {isSpanish ? 'Abrir carpeta' : 'Open folder'}
+                          {t('dashboard.openFolder')}
                         </button>
                       </div>
                     )}
@@ -637,21 +661,17 @@ export function DashboardScreen() {
                           <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                           <div>
                             <p>
-                              {entry.count} {isSpanish ? 'archivos' : 'files'}{' '}
+                              {entry.count} {t('common.files')}{' '}
                               {entry.action === 'moved'
-                                ? isSpanish
-                                  ? 'movidos a'
-                                  : 'moved to'
-                                : isSpanish
-                                ? 'dejados en'
-                                : 'left in'}{' '}
+                                ? t('dashboard.movedTo')
+                                : t('dashboard.leftIn')}{' '}
                               <span className="font-medium">
                                 {getLocalizedCategory(entry.category)}
                               </span>
                             </p>
                             {entry.reason && (
                               <button className="text-xs text-primary hover:underline">
-                                {isSpanish ? '¿Por qué?' : 'Why?'}
+                                {t('dashboard.why')}
                               </button>
                             )}
                           </div>
@@ -675,10 +695,23 @@ export function DashboardScreen() {
         {/* Undo Section */}
         {hasFilesOrganized && (
           <div className="border-t pt-6 space-y-3">
+            {/* Undo feedback message */}
+            {undoFeedback && (
+              <div className={`text-center text-sm p-2 rounded ${
+                undoFeedback.type === 'success'
+                  ? 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30'
+                  : undoFeedback.type === 'partial'
+                  ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30'
+                  : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30'
+              }`}>
+                {undoFeedback.message}
+              </div>
+            )}
+
             {showUndoConfirm ? (
               <div className="flex items-center justify-center gap-3">
                 <span className="text-sm text-muted-foreground">
-                  {isSpanish ? '¿Deshacer la última organización?' : 'Undo last organization?'}
+                  {t('dashboard.undoConfirmQuestion')}
                 </span>
                 <Button
                   variant="outline"
@@ -689,7 +722,7 @@ export function DashboardScreen() {
                   {isUndoing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    isSpanish ? 'Sí, deshacer' : 'Yes, undo'
+                    t('success.yesUndo')
                   )}
                 </Button>
                 <Button
@@ -698,7 +731,7 @@ export function DashboardScreen() {
                   onClick={() => setShowUndoConfirm(false)}
                   disabled={isUndoing}
                 >
-                  {isSpanish ? 'Cancelar' : 'Cancel'}
+                  {t('common.cancel')}
                 </Button>
               </div>
             ) : (

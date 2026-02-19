@@ -244,6 +244,10 @@ pub fn init_database(path: &PathBuf) -> Result<()> {
         "CREATE INDEX IF NOT EXISTS idx_activity_errors_session_id ON activity_errors(session_id)",
         [],
     )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_move_history_undo_lookup ON move_history(undone, moved_at DESC)",
+        [],
+    )?;
 
     Ok(())
 }

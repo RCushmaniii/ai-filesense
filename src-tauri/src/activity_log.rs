@@ -594,8 +594,26 @@ pub fn undo_operation(conn: &Connection, session_id: &str, op_id: i32) -> SqlRes
         }
     };
 
-    // Try to move the file back
-    match std::fs::rename(source, dest) {
+    // Ensure parent directory exists
+    if let Some(parent) = std::path::Path::new(dest).parent() {
+        if !parent.exists() {
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                return Ok(UndoResult {
+                    success: false,
+                    op_id,
+                    message: format!("Failed to create directory {}: {}", parent.display(), e),
+                });
+            }
+        }
+    }
+
+    // Try rename first, then copy+delete for cross-device moves
+    let move_result = std::fs::rename(source, dest)
+        .or_else(|_| {
+            std::fs::copy(source, dest).and_then(|_| std::fs::remove_file(source))
+        });
+
+    match move_result {
         Ok(_) => {
             // Update the operation status
             conn.execute(

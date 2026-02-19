@@ -328,7 +328,10 @@
     "error": "An error occurred",
     "retry": "Try again",
     "files": "files",
-    "folders": "folders"
+    "folders": "folders",
+    "undoComplete": "All files restored successfully.",
+    "undoPartial": "{restored} of {total} files restored. {failed} could not be restored.",
+    "undoFailed": "Could not restore files."
   },
   "errors": {
     "scanFailed": "Failed to scan files",
@@ -457,9 +460,20 @@
     "reviewFirstDesc": "Safe mode: all new files go to Review for your approval.",
     "autoArchive": "Archive older files automatically",
     "autoArchiveDesc": "Files older than 4 years are moved to Archive.",
+    "dashboardTitle": "AI FileSense Dashboard",
+    "filesNeedReview": "{count} files need review",
+    "newFilesDetected": "{count} new files detected",
+    "duplicateGroups": "{count} duplicate groups",
+    "movedTo": "moved to",
+    "leftIn": "left in",
+    "why": "Why?",
     "activityTitle": "What changed recently",
     "noRecentActivity": "When files are organized, moved, or archived, you'll see those changes listed here with timestamps and details.",
     "undoLastOrganization": "Undo last organization",
+    "undoConfirmQuestion": "Undo last organization?",
+    "later": "Later",
+    "updatedToday": "Updated today",
+    "openFolder": "Open folder",
     "folderInfo": {
       "review": {
         "purpose": "Files that need your input before being organized.",

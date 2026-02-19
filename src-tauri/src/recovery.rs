@@ -157,7 +157,7 @@ mod tests {
     fn test_check_incomplete_sessions_none() {
         let conn = setup_test_db();
         let result = check_incomplete_sessions(&conn).unwrap();
-        assert!(result.is_none());
+        assert!(result.is_empty());
     }
 
     #[test]
@@ -168,7 +168,7 @@ mod tests {
         let _session_id = create_session(&conn, Some("simple"), None).unwrap();
 
         let result = check_incomplete_sessions(&conn).unwrap();
-        assert!(result.is_some());
+        assert!(!result.is_empty());
     }
 
     #[test]

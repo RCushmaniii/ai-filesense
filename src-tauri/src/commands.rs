@@ -1267,6 +1267,14 @@ pub struct ExecutionResult {
     pub warnings: Vec<String>,
 }
 
+/// Result of undoing an organization operation
+#[derive(Debug, Clone, Serialize)]
+pub struct UndoOperationResult {
+    pub files_restored: usize,
+    pub files_failed: usize,
+    pub errors: Vec<String>,
+}
+
 /// Categorize a Windows/IO error into a user-friendly message
 fn categorize_io_error(e: &std::io::Error, path: &str) -> String {
     match e.kind() {
@@ -1393,10 +1401,11 @@ pub async fn execute_plan(
         .into_iter()
         .collect();
 
+    // Open a single DB connection for the entire execution
+    let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
+
     // Load plan items from database
     let items: Vec<(i64, String, String)> = {
-        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
-
         let mut stmt = conn.prepare(
             "SELECT file_id, source_path, destination_path
              FROM plan_items
@@ -1417,15 +1426,19 @@ pub async fn execute_plan(
             .collect()
     };
 
+    // Create an activity log session for this execution
+    let session_id = activity_log::create_session(&conn, Some("execute_plan"), None)
+        .map_err(|e| format!("Failed to create activity session: {}", e))?;
+
     let mut files_moved = 0;
     let mut files_skipped = 0;
     let mut files_failed = 0;
     let mut errors = Vec::new();
     let mut warnings = Vec::new();
 
-    for (file_id, source_path, destination_path) in items {
-        let source = std::path::Path::new(&source_path);
-        let dest_original = std::path::Path::new(&destination_path);
+    for (file_id, source_path, destination_path) in &items {
+        let source = std::path::Path::new(source_path);
+        let dest_original = std::path::Path::new(destination_path);
 
         // Edge case 1: Check path length (Windows 260 char limit)
         if destination_path.len() > 250 {
@@ -1441,14 +1454,13 @@ pub async fn execute_plan(
 
         // Edge case 3: Check if file is already at destination (previous run)
         if !source.exists() && dest_original.exists() {
-            // File was already moved - update database and count as success
             files_skipped += 1;
-            if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
-                conn.execute(
-                    "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
-                    rusqlite::params![&plan_id, file_id],
-                ).ok();
-                update_file_path_safe(&conn, file_id, &destination_path).ok();
+            conn.execute(
+                "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
+                rusqlite::params![&plan_id, file_id],
+            ).map_err(|e| e.to_string())?;
+            if let Err(e) = update_file_path_safe(&conn, *file_id, destination_path) {
+                warnings.push(format!("Database update warning for {}: {}", destination_path, e));
             }
             continue;
         }
@@ -1463,13 +1475,12 @@ pub async fn execute_plan(
         // Edge case 5: Check for cloud placeholder files (OneDrive)
         if is_cloud_placeholder(source) {
             warnings.push(format!("Cloud file may need to be downloaded first: {}", source_path));
-            // Try anyway - Windows might auto-download
         }
 
         // Create destination directory
         if let Some(parent) = dest_original.parent() {
             if let Err(e) = std::fs::create_dir_all(parent) {
-                errors.push(categorize_io_error(&e, &destination_path));
+                errors.push(categorize_io_error(&e, destination_path));
                 files_failed += 1;
                 continue;
             }
@@ -1486,15 +1497,32 @@ pub async fn execute_plan(
         };
         let final_dest_path = final_dest.to_string_lossy().to_string();
 
+        // Get file metadata for activity log
+        let file_size = std::fs::metadata(source).map(|m| m.len() as i64).ok();
+        let filename = source.file_name().map(|f| f.to_string_lossy().to_string());
+        let extension = source.extension().map(|e| e.to_string_lossy().to_string());
+
+        // Log operation to activity log before attempting move
+        let op_id = activity_log::log_operation(&conn, &session_id, &Operation {
+            op_type: OperationType::Move,
+            source_path: Some(source_path.clone()),
+            destination_path: Some(final_dest_path.clone()),
+            filename,
+            extension,
+            size_bytes: file_size,
+            confidence: None,
+            suggested_folder: None,
+            document_type: None,
+        }).map_err(|e| format!("Failed to log operation: {}", e))?;
+
         // Test mode: simulate the move without actually doing it
         if is_test_mode {
-            // In test mode, just count as successful without moving
-            if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
-                conn.execute(
-                    "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
-                    rusqlite::params![&plan_id, file_id],
-                ).ok();
-            }
+            conn.execute(
+                "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
+                rusqlite::params![&plan_id, file_id],
+            ).map_err(|e| e.to_string())?;
+            activity_log::update_operation_status(&conn, &session_id, op_id, OperationStatus::Completed, None)
+                .map_err(|e| format!("Failed to update operation status: {}", e))?;
             files_moved += 1;
             continue;
         }
@@ -1502,81 +1530,113 @@ pub async fn execute_plan(
         // Attempt to move the file
         let move_result = std::fs::rename(&source, &final_dest);
 
-        match move_result {
-            Ok(_) => {
-                // Successfully moved via rename
-                if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
-                    // Record in move history (ignore errors - non-critical)
-                    conn.execute(
-                        "INSERT INTO move_history (plan_id, file_id, source_path, destination_path)
-                         VALUES (?1, ?2, ?3, ?4)",
-                        rusqlite::params![&plan_id, file_id, &source_path, &final_dest_path],
-                    ).ok();
-
-                    // Update plan item status
-                    conn.execute(
-                        "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
-                        rusqlite::params![&plan_id, file_id],
-                    ).ok();
-
-                    // Update file path safely (handles UNIQUE constraint)
-                    if let Err(e) = update_file_path_safe(&conn, file_id, &final_dest_path) {
-                        warnings.push(format!("Database update warning for {}: {}", final_dest_path, e));
-                    }
-                }
-                files_moved += 1;
-            }
+        let file_move_succeeded = match move_result {
+            Ok(_) => true,
             Err(_rename_err) => {
-                // Edge case 7: Cross-device move - try copy + delete
+                // Cross-device move - try copy + delete
                 match std::fs::copy(&source, &final_dest) {
                     Ok(_) => {
-                        // Copy succeeded, try to delete source
                         if let Err(del_err) = std::fs::remove_file(&source) {
-                            // Edge case 8: Copied but can't delete source
                             warnings.push(format!(
                                 "File copied but original couldn't be deleted: {} - {}",
                                 source_path,
-                                categorize_io_error(&del_err, &source_path)
+                                categorize_io_error(&del_err, source_path)
                             ));
                         }
-
-                        // Update database
-                        if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
-                            conn.execute(
-                                "INSERT INTO move_history (plan_id, file_id, source_path, destination_path)
-                                 VALUES (?1, ?2, ?3, ?4)",
-                                rusqlite::params![&plan_id, file_id, &source_path, &final_dest_path],
-                            ).ok();
-
-                            conn.execute(
-                                "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
-                                rusqlite::params![&plan_id, file_id],
-                            ).ok();
-
-                            if let Err(e) = update_file_path_safe(&conn, file_id, &final_dest_path) {
-                                warnings.push(format!("Database update warning for {}: {}", final_dest_path, e));
-                            }
-                        }
-                        files_moved += 1;
+                        true
                     }
                     Err(copy_err) => {
-                        // Both rename and copy failed - report user-friendly error
-                        let error_msg = categorize_io_error(&copy_err, &source_path);
+                        let error_msg = categorize_io_error(&copy_err, source_path);
                         errors.push(error_msg);
                         files_failed += 1;
+                        activity_log::update_operation_status(
+                            &conn, &session_id, op_id, OperationStatus::Failed,
+                            Some(&format!("Move failed: {}", copy_err)),
+                        ).ok();
+                        false
                     }
+                }
+            }
+        };
+
+        if file_move_succeeded {
+            // Wrap critical DB writes in a transaction
+            let db_result = conn.execute_batch("BEGIN")
+                .and_then(|_| {
+                    conn.execute(
+                        "INSERT INTO move_history (plan_id, file_id, source_path, destination_path)
+                         VALUES (?1, ?2, ?3, ?4)",
+                        rusqlite::params![&plan_id, file_id, source_path, &final_dest_path],
+                    )?;
+                    conn.execute(
+                        "UPDATE plan_items SET status = 'completed' WHERE plan_id = ?1 AND file_id = ?2",
+                        rusqlite::params![&plan_id, file_id],
+                    )?;
+                    conn.execute_batch("COMMIT")
+                });
+
+            match db_result {
+                Ok(_) => {
+                    // Update activity log
+                    activity_log::update_operation_status(
+                        &conn, &session_id, op_id, OperationStatus::Completed, None,
+                    ).ok();
+
+                    // Update file path (non-critical, outside transaction)
+                    if let Err(e) = update_file_path_safe(&conn, *file_id, &final_dest_path) {
+                        warnings.push(format!("Database update warning for {}: {}", final_dest_path, e));
+                    }
+                    files_moved += 1;
+                }
+                Err(db_err) => {
+                    // Rollback the transaction
+                    conn.execute_batch("ROLLBACK").ok();
+
+                    // DB failed after file was moved — move it back to prevent lost undo record
+                    let rollback_result = std::fs::rename(&final_dest, &source)
+                        .or_else(|_| {
+                            std::fs::copy(&final_dest, &source).and_then(|_| std::fs::remove_file(&final_dest))
+                        });
+
+                    match rollback_result {
+                        Ok(_) => {
+                            errors.push(format!(
+                                "Database error for {} (file restored to original): {}",
+                                source_path, db_err
+                            ));
+                        }
+                        Err(fs_err) => {
+                            errors.push(format!(
+                                "CRITICAL: Database error AND failed to restore {} (file at {}): DB={}, FS={}",
+                                source_path, final_dest_path, db_err, fs_err
+                            ));
+                        }
+                    }
+                    files_failed += 1;
+                    activity_log::update_operation_status(
+                        &conn, &session_id, op_id, OperationStatus::Failed,
+                        Some(&format!("DB write failed: {}", db_err)),
+                    ).ok();
                 }
             }
         }
     }
 
     // Update plan status
-    if let Ok(conn) = crate::db::open_connection(&db_path_clone) {
-        conn.execute(
-            "UPDATE organization_plans SET status = 'executed', executed_at = CURRENT_TIMESTAMP WHERE id = ?1",
-            rusqlite::params![&plan_id],
-        ).ok();
-    }
+    conn.execute(
+        "UPDATE organization_plans SET status = 'executed', executed_at = CURRENT_TIMESTAMP WHERE id = ?1",
+        rusqlite::params![&plan_id],
+    ).map_err(|e| e.to_string())?;
+
+    // Complete the activity log session
+    let session_status = if files_failed == 0 {
+        SessionStatus::Completed
+    } else if files_moved > 0 {
+        SessionStatus::Partial
+    } else {
+        SessionStatus::Failed
+    };
+    activity_log::complete_session(&conn, &session_id, session_status).ok();
 
     Ok(ExecutionResult {
         files_moved,
@@ -1591,14 +1651,12 @@ pub async fn execute_plan(
 #[tauri::command]
 pub async fn undo_last_operation(
     db_path: State<'_, DbPath>,
-) -> Result<usize, String> {
+) -> Result<UndoOperationResult, String> {
     let db_path_clone = db_path.0.clone();
+    let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
 
     // Get the most recent plan that was executed and not yet undone
     let moves: Vec<(i64, i64, String, String)> = {
-        let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
-
-        // Get moves from most recent executed plan that hasn't been undone
         let mut stmt = conn.prepare(
             "SELECT mh.id, mh.file_id, mh.source_path, mh.destination_path
              FROM move_history mh
@@ -1620,10 +1678,16 @@ pub async fn undo_last_operation(
     };
 
     if moves.is_empty() {
-        return Ok(0);
+        return Ok(UndoOperationResult {
+            files_restored: 0,
+            files_failed: 0,
+            errors: vec![],
+        });
     }
 
-    let mut undone_count = 0;
+    let mut files_restored = 0;
+    let mut files_failed = 0;
+    let mut errors = Vec::new();
 
     for (history_id, file_id, original_source, current_dest) in moves {
         let source = std::path::Path::new(&current_dest); // Current location (was destination)
@@ -1631,43 +1695,91 @@ pub async fn undo_last_operation(
 
         // Check if file exists at current location
         if !source.exists() {
+            errors.push(format!("File not found at organized location: {}", current_dest));
+            files_failed += 1;
+            // Still mark as undone since there's nothing to move back
+            conn.execute(
+                "UPDATE move_history SET undone = 1, undone_at = CURRENT_TIMESTAMP WHERE id = ?1",
+                rusqlite::params![history_id],
+            ).ok();
             continue;
         }
 
-        // Create original directory if it doesn't exist
-        if let Some(parent) = dest.parent() {
-            if let Err(_) = std::fs::create_dir_all(parent) {
+        // Check for orphaned copy at original location
+        if dest.exists() {
+            let source_size = std::fs::metadata(source).map(|m| m.len()).unwrap_or(0);
+            let dest_size = std::fs::metadata(dest).map(|m| m.len()).unwrap_or(0);
+
+            if source_size == dest_size && source_size > 0 {
+                // Same-size file already at original location — just clean up the organized copy
+                if let Err(e) = std::fs::remove_file(source) {
+                    errors.push(format!("Could not remove organized copy {}: {}", current_dest, e));
+                    files_failed += 1;
+                    continue;
+                }
+                // Mark as undone
+                conn.execute(
+                    "UPDATE move_history SET undone = 1, undone_at = CURRENT_TIMESTAMP WHERE id = ?1",
+                    rusqlite::params![history_id],
+                ).map_err(|e| e.to_string())?;
+                conn.execute(
+                    "UPDATE files SET path = ?1, last_scanned_at = CURRENT_TIMESTAMP WHERE id = ?2",
+                    rusqlite::params![&original_source, file_id],
+                ).map_err(|e| e.to_string())?;
+                files_restored += 1;
+                continue;
+            } else {
+                // Different file at original location — conflict
+                errors.push(format!(
+                    "Conflict: different file exists at original location {} (source {}B vs dest {}B)",
+                    original_source, source_size, dest_size
+                ));
+                files_failed += 1;
                 continue;
             }
         }
 
-        // Move back to original location
+        // Create original directory if it doesn't exist
+        if let Some(parent) = dest.parent() {
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                errors.push(format!("Could not create directory {}: {}", parent.display(), e));
+                files_failed += 1;
+                continue;
+            }
+        }
+
+        // Move back to original location (with cross-device fallback)
         let move_result = std::fs::rename(&source, &dest)
             .or_else(|_| {
-                // Try copy + delete
                 std::fs::copy(&source, &dest).and_then(|_| std::fs::remove_file(&source))
             });
 
-        if move_result.is_ok() {
-            // Mark as undone in history
-            let conn = crate::db::open_connection(&db_path_clone).map_err(|e| e.to_string())?;
+        match move_result {
+            Ok(_) => {
+                conn.execute(
+                    "UPDATE move_history SET undone = 1, undone_at = CURRENT_TIMESTAMP WHERE id = ?1",
+                    rusqlite::params![history_id],
+                ).map_err(|e| e.to_string())?;
 
-            conn.execute(
-                "UPDATE move_history SET undone = 1, undone_at = CURRENT_TIMESTAMP WHERE id = ?1",
-                rusqlite::params![history_id],
-            ).map_err(|e| e.to_string())?;
+                conn.execute(
+                    "UPDATE files SET path = ?1, last_scanned_at = CURRENT_TIMESTAMP WHERE id = ?2",
+                    rusqlite::params![&original_source, file_id],
+                ).map_err(|e| e.to_string())?;
 
-            // Update file path in files table back to original
-            conn.execute(
-                "UPDATE files SET path = ?1, last_scanned_at = CURRENT_TIMESTAMP WHERE id = ?2",
-                rusqlite::params![&original_source, file_id],
-            ).map_err(|e| e.to_string())?;
-
-            undone_count += 1;
+                files_restored += 1;
+            }
+            Err(e) => {
+                errors.push(format!("Failed to restore {}: {}", original_source, e));
+                files_failed += 1;
+            }
         }
     }
 
-    Ok(undone_count)
+    Ok(UndoOperationResult {
+        files_restored,
+        files_failed,
+        errors,
+    })
 }
 
 // ============================================

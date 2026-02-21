@@ -69,8 +69,8 @@ video_url: "/video/AI_FileSense-brief.mp4"
 video_poster: "/video/AI-FileSense-brief-poster.jpg"
 
 # === LINKS ===
-demo_url: "https://ai-filesense-website.vercel.app/"
-live_url: "https://ai-filesense-website.vercel.app/"
+demo_url: ""
+live_url: ""
 
 # === OPTIONAL ===
 metrics:

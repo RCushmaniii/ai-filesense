@@ -6,7 +6,7 @@ portfolio_featured: true
 
 # === CARD DISPLAY ===
 title: "AI FileSense"
-tagline: "AI-powered local file organization for Windows — private, safe, and accessible to everyone"
+tagline: "Local AI file organizer — private, safe, zero config"
 slug: "ai-filesense"
 category: "AI Automation"
 tech_stack:
@@ -14,66 +14,59 @@ tech_stack:
   - "Rust"
   - "React"
   - "TypeScript"
-  - "SQLite"
   - "Claude Haiku"
-  - "shadcn/ui"
-  - "Tailwind CSS"
-thumbnail: "public/images/ai-filesense-thumb.jpg"
-status: "In Development"
+thumbnail: "/images/ai-filesense-thumb.jpg"
+status: "Demo"
 
 # === DETAIL PAGE ===
-problem: "Most people have hundreds or thousands of documents scattered across Desktop, Documents, and Downloads with no system. Manual organization takes hours and most people quit after 10 minutes. Cloud-based solutions require uploading sensitive personal files to third-party servers. Existing AI tools demand API keys, terminals, and developer knowledge — locking out the 99% of users who aren't technical."
-solution: "A Windows desktop app that uses AI to read document content and classify files into a clean, consistent 12-folder system. Files never leave the device. Every move is logged and fully reversible. Zero configuration required — the developer provides the API key so users never touch a terminal or API console."
+problem: "Most people have thousands of documents scattered across Desktop, Documents, and Downloads with no system — manual sorting takes hours and most quit in minutes. Cloud-based solutions require uploading sensitive files to third-party servers, and existing AI tools demand API keys and terminal commands that lock out non-technical users."
+solution: "A lightweight Windows desktop app (~5 MB) that uses Claude Haiku to read document content and classify files into a consistent 12-folder system without files ever leaving the device. Zero configuration required — the developer provides the API key so users never touch a terminal or API console."
 key_features:
   - "Content-based AI classification — reads PDFs, DOCX, PPTX, TXT, not just filenames"
-  - "12-folder numbered system (Work, Money, Home, Health, Legal, School, Family, Clients, Projects, Travel, Archive, Review) with smart subcategories"
   - "Full undo support — rollback a single file or entire session, even after app restart"
-  - "Crash recovery — detects incomplete sessions and offers resume, rollback, or discard"
   - "Confidence-based routing — uncertain files go to Review for human decision, never mis-filed"
-  - "Native bilingual UI — English + Spanish (Mexico) throughout, including AI-generated questions"
-  - "Zero config freemium — developer-provided API key, no accounts, no setup"
-  - "Privacy-first — files stay local, only 300-char snippets sent to AI, prompt injection prevention via serde_json"
-  - "Test mode by default — preview all changes before anything actually moves"
-  - "~5 MB app size (Tauri 2) vs ~200 MB for Electron equivalents"
+  - "Privacy-first — files stay local, only 300-char snippets sent to AI, prompt injection prevention"
+  - "Zero config freemium — developer-provided API key, no accounts, no setup, 10 free scans"
 
 # === MEDIA: PORTFOLIO SLIDES ===
 slides:
-  - src: "public/images/ai-filesense-02.png"
+  - src: "/images/ai-filesense-02.png"
     alt_en: "Turn Chaos into Clarity — AI FileSense hero slide"
-    alt_es: "Intelligent. Safe. Accessible."
-  - src: "public/images/ai-filesense-03.png"
+    alt_es: "Convierte el Caos en Claridad — diapositiva principal de AI FileSense"
+  - src: "/images/ai-filesense-03.png"
     alt_en: "We are drowning in data but starving for order"
-    alt_es: "The problem: thousands of unorganized files creating decision fatigue and buried assets."
-  - src: "public/images/ai-filesense-04.png"
-    alt_en: "The Barriers to Organization"
-    alt_es: "Manual sorting, inconsistent systems, and technical complexity keep people from organizing."
-  - src: "public/images/ai-filesense-05.png"
-    alt_en: "The Barriers to Organization (continued)"
-    alt_es: "Hours of low-value decision making, ad-hoc folders that fail, and AI tools that require complex APIs."
-  - src: "public/images/ai-filesense-06.png"
-    alt_en: "AI FileSense — Just click and go"
-    alt_es: "Zero configuration. No API keys required. Powered by Claude Haiku."
-  - src: "public/images/ai-filesense-07.png"
-    alt_en: "Classification based on content, not just filenames"
-    alt_es: "Deep parsing reads PDFs, DOCX, PPTX, TXT, CSV, and MD files to understand what each document actually is."
-  - src: "public/images/ai-filesense-09.png"
-    alt_en: "Confidence and Human Control"
-    alt_es: "Smart routing: high-confidence files are auto-filed, low-confidence files route to Review for human decision."
-  - src: "public/images/ai-filesense-10.png"
-    alt_en: "AI for the Non-Technical 99%"
-    alt_es: "Zero config, no terminal, no API keys. The developer handles backend complexity so users don't have to."
-  - src: "public/images/ai-filesense-11.png"
-    alt_en: "Uncompromising Safety"
-    alt_es: "Privacy by design: files never leave the device, injection prevention via serialization, no files ever deleted."
-  - src: "public/images/ai-filesense-12.png"
-    alt_en: "The Safety Net"
-    alt_es: "Full undo support, test mode to preview changes, and crash recovery with atomic writes."
-  - src: "public/images/ai-filesense-13.png"
+    alt_es: "Nos ahogamos en datos pero nos falta orden"
+  - src: "/images/ai-filesense-04.png"
+    alt_en: "The Barriers to Organization — manual sorting, inconsistent systems, technical complexity"
+    alt_es: "Las Barreras para la Organizacion — clasificacion manual, sistemas inconsistentes, complejidad tecnica"
+  - src: "/images/ai-filesense-05.png"
+    alt_en: "Hours of low-value decision making, ad-hoc folders that fail, AI tools requiring complex APIs"
+    alt_es: "Horas de decisiones de bajo valor, carpetas improvisadas que fallan, herramientas IA que requieren APIs complejas"
+  - src: "/images/ai-filesense-06.png"
+    alt_en: "AI FileSense — Just click and go. Zero configuration. Powered by Claude Haiku."
+    alt_es: "AI FileSense — Solo haz clic. Cero configuracion. Impulsado por Claude Haiku."
+  - src: "/images/ai-filesense-07.png"
+    alt_en: "Classification based on content, not just filenames — deep parsing of PDFs, DOCX, PPTX, TXT"
+    alt_es: "Clasificacion basada en contenido, no solo nombres de archivo — analisis de PDFs, DOCX, PPTX, TXT"
+  - src: "/images/ai-filesense-09.png"
+    alt_en: "Confidence and Human Control — smart routing for uncertain files"
+    alt_es: "Confianza y Control Humano — enrutamiento inteligente para archivos inciertos"
+  - src: "/images/ai-filesense-10.png"
+    alt_en: "AI for the Non-Technical 99% — no terminal, no API keys, no config"
+    alt_es: "IA para el 99% No Tecnico — sin terminal, sin API keys, sin configuracion"
+  - src: "/images/ai-filesense-11.png"
+    alt_en: "Uncompromising Safety — privacy by design, injection prevention, no files ever deleted"
+    alt_es: "Seguridad Sin Compromiso — privacidad por diseno, prevencion de inyeccion, ningun archivo eliminado"
+  - src: "/images/ai-filesense-12.png"
+    alt_en: "The Safety Net — full undo, test mode, crash recovery with atomic writes"
+    alt_es: "La Red de Seguridad — deshacer completo, modo prueba, recuperacion de fallos con escrituras atomicas"
+  - src: "/images/ai-filesense-13.png"
     alt_en: "From Digital Chaos to Automated Order — full system architecture"
-    alt_es: "Complete system view: from digital clutter through local AI processing to the universal 12-folder structure."
+    alt_es: "Del Caos Digital al Orden Automatizado — arquitectura completa del sistema"
 
 # === MEDIA: VIDEO ===
-video_poster: "public/video/AI-FileSense-brief-poster.jpg"
+video_url: "/video/AI_FileSense-brief.mp4"
+video_poster: "/video/AI-FileSense-brief-poster.jpg"
 
 # === LINKS ===
 demo_url: "https://ai-filesense-website.vercel.app/"
@@ -104,25 +97,3 @@ AI FileSense solves a universal problem: digital file clutter. Most people have 
 AI FileSense takes a different approach. It's a lightweight Windows desktop app (~5 MB) that uses Claude Haiku to read actual document content and classify each file into a consistent 12-folder system. Files never leave the user's computer — only filenames and 300-character text snippets are sent to the AI. Every file move is transaction-logged with full undo support, crash recovery, and a test mode that lets users preview changes before anything moves.
 
 The key differentiator is accessibility. Unlike other AI tools that require API keys, terminal commands, and developer knowledge, AI FileSense requires zero configuration. The developer provides the Anthropic API key via a freemium model — users just click "Scan" and the AI does the rest. The app is also natively bilingual (English + Spanish/Mexico), serving the large US Hispanic market with a first-class localized experience, not a machine-translated afterthought.
-
-## Video Brief
-
-[![AI FileSense product brief](public/video/AI-FileSense-brief-poster.jpg)](public/video/AI_FileSense-brief.mp4)
-
-**60-second product brief** showing how AI FileSense turns file clutter into a clean, consistent 12-folder system — powered by Claude Haiku, fully local, and zero configuration required.
-
-## Slide Deck
-
-| # | Slide | Message |
-|---|-------|---------|
-| 1 | ![Hero](public/images/ai-filesense-02.png) | **Turn Chaos into Clarity.** Intelligent. Safe. Accessible. |
-| 2 | ![Problem](public/images/ai-filesense-03.png) | **Drowning in data, starving for order.** Thousands of files, decision fatigue, buried assets. |
-| 3 | ![Barriers](public/images/ai-filesense-04.png) | **Three barriers:** Manual sorting, inconsistent systems, technical complexity. |
-| 4 | ![Barriers cont.](public/images/ai-filesense-05.png) | Hours of low-value decisions. Ad-hoc folders that fail. AI tools requiring complex APIs. |
-| 5 | ![Product](public/images/ai-filesense-06.png) | **Just click and go.** Zero configuration. No API keys. Powered by Claude Haiku. |
-| 6 | ![AI](public/images/ai-filesense-07.png) | **Content-based classification.** Reads PDFs, DOCX, PPTX, TXT — not just filenames. |
-| 7 | ![Confidence](public/images/ai-filesense-09.png) | **Smart routing.** High confidence = auto-file. Low confidence = human Review. |
-| 8 | ![Accessibility](public/images/ai-filesense-10.png) | **AI for the non-technical 99%.** No terminal. No API keys. No config. |
-| 9 | ![Security](public/images/ai-filesense-11.png) | **Uncompromising safety.** Privacy, injection prevention, no deletion. |
-| 10 | ![Safety](public/images/ai-filesense-12.png) | **The Safety Net.** Full undo. Test mode. Crash recovery. |
-| 11 | ![Architecture](public/images/ai-filesense-13.png) | **From chaos to order.** Complete system: AI processing into 12 universal folders. |

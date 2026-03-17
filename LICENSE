@@ -1,20 +1,26 @@
-Proprietary License
+Copyright (c) 2024-2026 CushLabs AI Services (Robert Cushman III). All Rights Reserved.
 
-Copyright (c) 2026 AI FileSense. All Rights Reserved.
+PROPRIETARY — PORTFOLIO DEMONSTRATION ONLY
 
-This software and associated documentation files (the "Software") are proprietary
-and confidential. Unauthorized copying, modification, distribution, or use of this
-Software, via any medium, is strictly prohibited.
+This software and all associated documentation files (the "Software") are the
+exclusive intellectual property of CushLabs AI Services.
 
-The Software is provided for evaluation purposes only. No license, express or
-implied, is granted to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software.
+PERMITTED:
+  - Viewing and reading this code for professional evaluation of the author's work
+  - Referencing this repository in the context of hiring, partnership, or due diligence
+  - Linking to this repository
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+NOT PERMITTED:
+  - Copying, cloning, forking, or reproducing this code for any purpose other than
+    personal review
+  - Using any portion of this code in your own projects, products, or services,
+    whether commercial or non-commercial
+  - Distributing, sublicensing, or publishing derivative works based on this code
+  - Using this code as a template, boilerplate, or starting point for any project
 
-For licensing inquiries, please open an issue in the repository.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+
+For licensing inquiries: info@cushlabs.ai
+https://cushlabs.ai

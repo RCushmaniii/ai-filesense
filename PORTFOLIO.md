@@ -3,6 +3,7 @@
 portfolio_enabled: true
 portfolio_priority: 16
 portfolio_featured: false
+portfolio_last_reviewed: "2026-09-13"
 
 # === CARD DISPLAY ===
 title: "AI FileSense"
@@ -100,19 +101,6 @@ health_status:
   security_headers: "Y"
   rate_limiting: "n/a"
   env_validation: "-"
-  analytics: "DEFERRED"
-  structured_logging: "-"
-  dependabot: "Y"
-  secret_scanning: "Y"
-  db_backup: "-"
-health_status:
-  sentry: "-"
-  testing: "-"
-  ci_cd: "Y"
-  health_endpoint: "n/a"
-  security_headers: "-"
-  rate_limiting: "n/a"
-  env_validation: "partial"
   analytics: "DEFERRED"
   structured_logging: "-"
   dependabot: "Y"
